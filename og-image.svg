@@ -1,0 +1,95 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1A3FB8"/>
+      <stop offset="50%" stop-color="#2E64FF"/>
+      <stop offset="100%" stop-color="#6B4EE0"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.72" cy="0.28" r="0.65">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.20)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </radialGradient>
+    <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M60 0H0V60" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+    </pattern>
+    <linearGradient id="cardglass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.22)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0.08)"/>
+    </linearGradient>
+  </defs>
+
+  <!-- background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <!-- decorative blur circles -->
+  <circle cx="1080" cy="90" r="200" fill="rgba(255,255,255,0.07)"/>
+  <circle cx="1080" cy="90" r="90" fill="rgba(255,255,255,0.05)"/>
+  <circle cx="150" cy="600" r="150" fill="rgba(255,255,255,0.04)"/>
+
+  <!-- Live dot + badge -->
+  <g transform="translate(80, 108)">
+    <circle cx="10" cy="10" r="6" fill="#7AE8B0"/>
+    <text x="32" y="16" font-family="'JetBrains Mono', monospace" font-size="16" font-weight="800" fill="rgba(255,255,255,0.85)" letter-spacing="3">
+      LIVE IN TORONTO
+    </text>
+  </g>
+
+  <!-- DRIVEE wordmark -->
+  <text x="78" y="278" font-family="'Plus Jakarta Sans', 'Helvetica Neue', Arial, sans-serif" font-size="128" font-weight="800" fill="white" letter-spacing="-6">
+    Drivee<tspan fill="#7AE8B0">.</tspan>
+  </text>
+
+  <!-- Tagline -->
+  <text x="80" y="352" font-family="'Plus Jakarta Sans', 'Helvetica Neue', Arial, sans-serif" font-size="44" font-weight="700" fill="white" letter-spacing="-1.5">
+    The driver's app for Toronto.
+  </text>
+
+  <!-- Sub-line -->
+  <text x="80" y="410" font-family="'Plus Jakarta Sans', 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="500" fill="rgba(255,255,255,0.82)">
+    Snap a ticket. See if you should pay or fight - the verdict in 8 seconds.
+  </text>
+
+  <!-- Feature pills -->
+  <g transform="translate(80, 470)">
+    <rect x="0" y="0" width="204" height="46" rx="23" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.22)"/>
+    <text x="102" y="30" font-family="'Plus Jakarta Sans', 'Helvetica Neue', Arial, sans-serif" font-size="15" font-weight="700" fill="white" text-anchor="middle">AI Ticket Scanner</text>
+    <rect x="220" y="0" width="182" height="46" rx="23" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.22)"/>
+    <text x="311" y="30" font-family="'Plus Jakarta Sans', 'Helvetica Neue', Arial, sans-serif" font-size="15" font-weight="700" fill="white" text-anchor="middle">VIN Reports</text>
+    <rect x="418" y="0" width="196" height="46" rx="23" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.22)"/>
+    <text x="516" y="30" font-family="'Plus Jakarta Sans', 'Helvetica Neue', Arial, sans-serif" font-size="15" font-weight="700" fill="white" text-anchor="middle">Free Legal Verdict</text>
+  </g>
+
+  <!-- URL -->
+  <text x="80" y="576" font-family="'JetBrains Mono', monospace" font-size="20" font-weight="800" fill="rgba(255,255,255,0.7)" letter-spacing="2">
+    DRIVEE.CA
+  </text>
+
+  <!-- ── Premium frosted "verdict" card (replaces mascot) ── -->
+  <g transform="translate(792, 150)">
+    <!-- soft shadow -->
+    <rect x="8" y="16" width="330" height="330" rx="28" fill="rgba(11,20,48,0.28)"/>
+    <!-- glass card -->
+    <rect x="0" y="0" width="330" height="330" rx="28" fill="url(#cardglass)" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+
+    <!-- header row -->
+    <circle cx="34" cy="42" r="6" fill="#7AE8B0"/>
+    <text x="50" y="47" font-family="'JetBrains Mono', monospace" font-size="13" font-weight="800" fill="rgba(255,255,255,0.85)" letter-spacing="2">TICKET SCANNED</text>
+    <text x="296" y="47" font-family="'JetBrains Mono', monospace" font-size="12" font-weight="700" fill="rgba(255,255,255,0.6)" text-anchor="end">8s</text>
+
+    <!-- fine amount -->
+    <text x="30" y="118" font-family="'Plus Jakarta Sans', 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="600" fill="rgba(255,255,255,0.7)">Fine amount</text>
+    <text x="30" y="176" font-family="'Plus Jakarta Sans', 'Helvetica Neue', Arial, sans-serif" font-size="64" font-weight="800" fill="white" letter-spacing="-2">$120.00</text>
+
+    <!-- divider -->
+    <rect x="30" y="204" width="270" height="1.5" fill="rgba(255,255,255,0.2)"/>
+
+    <!-- verdict pill -->
+    <rect x="30" y="228" width="270" height="66" rx="16" fill="rgba(122,232,176,0.22)" stroke="rgba(122,232,176,0.5)" stroke-width="1.5"/>
+    <circle cx="66" cy="261" r="18" fill="#7AE8B0"/>
+    <path d="M58 261 l6 6 l12 -13" stroke="#0E2E1C" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="98" y="256" font-family="'Plus Jakarta Sans', 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="800" fill="white">FIGHT IT</text>
+    <text x="98" y="280" font-family="'Plus Jakarta Sans', 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="500" fill="rgba(255,255,255,0.8)">Strong grounds to dispute</text>
+  </g>
+</svg>

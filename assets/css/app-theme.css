@@ -1,0 +1,112 @@
+/* ==========================================================================
+   Drivee — app theme bridge
+   app.html is the original single-file PWA, carried over working. It is
+   thoroughly tokenised (a base set plus the --dv2-* design-v2 set), so the
+   cosmic palette is applied by re-pointing those tokens rather than
+   rewriting ~19k lines of behaviour.
+
+   Loaded last, after the app's own <style>.
+   ========================================================================== */
+
+:root{
+  /* ── base set ─────────────────────────────────────────────────── */
+  --bg:          #08060F;
+  --surface:     #120E22;
+  --elevated:    #16122A;
+  --surface-3:   #1A1530;
+  --surface-4:   #221C3C;
+  --border:      rgba(255,255,255,.12);
+  --border-focus:rgba(110,155,255,.55);
+
+  --blue:        #2D63F0;
+  --primary-dim: #1D4ED8;
+  --green:       #25C065;
+  --ev-green:    #25C065;
+  --red:         #FF5A4E;
+  --danger:      #FF5A4E;
+  --amber:       #E89B22;
+  --orange:      #E89B22;
+  --premium:     #E89B22;
+  --purple:      #A78BFA;
+
+  --shadow-btn:  0 6px 20px rgba(45,99,240,.42);
+
+  /* neutral text scale used by the older screens */
+  --text-primary:   #F2F0FA;
+  --text-secondary: #A9A3C4;
+  --text-tertiary:  #9189AE;
+  --text-disabled:  #5C5675;
+
+  /* referenced with light fallbacks that would otherwise leak through */
+  --ink:      #F2F0FA;
+  --blue-d:   #9DBAFF;
+  --blue-50:  rgba(45,99,240,.15);
+
+  /* ── design-v2 set ────────────────────────────────────────────── */
+  --dv2-bg:        #08060F;
+  --dv2-paper:     #120E22;
+  --dv2-ink:       #F2F0FA;
+  --dv2-ink2:      #A9A3C4;
+  --dv2-ink3:      #9189AE;
+
+  /* solid brand blue stays for fills; the "dark blue" slot is text, so it
+     has to invert to stay legible on the void */
+  --dv2-blue:      #2D63F0;
+  --dv2-blue-d:      #9DBAFF;  /* text */
+  --dv2-blue-d-fill: #1A3FB8;  /* the same token used as a dark card fill */
+  --dv2-blue-50:   rgba(45,99,240,.15);
+
+  --dv2-green:     #25C065;
+  --dv2-red:       #FF5A4E;
+  --dv2-amber:     #E89B22;
+
+  /* pastel chip tints → translucent dark tints of the same hue */
+  --dv2-sky:       rgba(45,99,240,.15);
+  --dv2-mint:      rgba(37,192,101,.14);
+  --dv2-sand:      rgba(232,155,34,.14);
+  --dv2-peach:     rgba(255,122,80,.14);
+  --dv2-lilac:     rgba(167,139,250,.16);
+
+  --dv2-line:      rgba(255,255,255,.10);
+  --dv2-line-soft: rgba(255,255,255,.055);
+}
+
+html, body{ background:var(--dv2-bg); color:var(--dv2-ink); }
+
+/* ── form controls ───────────────────────────────────────────────── */
+input, select, textarea{
+  background:#0A0816; color:var(--dv2-ink);
+  border-color:rgba(255,255,255,.16);
+}
+input::placeholder, textarea::placeholder{ color:var(--dv2-ink3); }
+select option{ background:#120E22; color:#F2F0FA; }
+
+/* ── keep the install mock-ups looking like real white phones ───── */
+.dp-phone, .phone-mock, .install-phone, [class*="mockup"]{
+  background:#FFFFFF!important;
+  color:#0B1430!important;
+}
+
+::selection{ background:rgba(45,99,240,.4); color:#fff; }
+
+/* ── components that use the solid brand blue as TEXT on a tint ──── */
+/* #2D63F0 only reaches ~3.5:1 on these dark chips; lift to the text tint. */
+.firm-tag, .badge, .dv2-pill, .chip, .tag,
+.btn.btn-ghost, .btn.secondary, .btn-secondary{
+  color:#9DBAFF;
+}
+/* a mid-grey token had been used as a chip FILL — too light to sit under text */
+.badge{ background:rgba(45,99,240,.16); border:1px solid rgba(110,155,255,.28); }
+
+/* muted currency/unit marks */
+.tcc-dollar-sign{ color:#A9A3C4; }
+
+/* Muted badge fill. The JS used to paint this with --text-tertiary, which is
+   a TEXT tone — far too light to carry text once the theme inverted. */
+:root{
+  --chip-muted: rgba(255,255,255,.10);
+  --chip-warn:  rgba(232,155,34,.22);
+}
+
+/* inline links & "see all" affordances still carrying the solid brand blue */
+a[href^="mailto:"], .see-all, .live, .link, .dv2-link{ color:#9DBAFF; }

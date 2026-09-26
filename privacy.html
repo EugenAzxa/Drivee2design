@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Privacy & Terms — Drivee</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Serif:wght@500;600;700&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #FAFBFD;
+    --paper: #FFFFFF;
+    --ink: #0B1430;
+    --ink2: #4A5267;
+    --ink3: #8C95A7;
+    --line: rgba(11,20,48,0.10);
+    --line-soft: rgba(11,20,48,0.06);
+    --blue: #2E64FF;
+    --blue-d: #1A3FB8;
+    --blue-50: #EAF0FF;
+    --green: #1FAB6B;
+    --mint: #E6F8EF;
+    --amber: #E89B22;
+    --red: #E1473D;
+    --font: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --serif: 'IBM Plex Serif', Georgia, serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg); color: var(--ink);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .nav {
+    padding: 22px 32px;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+    position: sticky; top: 0; z-index: 5;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-back {
+    display: inline-flex; align-items: center; gap: 8px;
+    text-decoration: none;
+    color: var(--blue-d);
+    font-weight: 700; font-size: 14px;
+  }
+  .brand {
+    font-family: var(--serif);
+    font-size: 22px; font-weight: 700;
+    color: var(--ink);
+    text-decoration: none;
+    letter-spacing: -0.5px;
+  }
+  .brand .dot { color: var(--blue); }
+
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 56px 24px 80px;
+  }
+
+  .kicker {
+    font-family: var(--mono);
+    font-size: 11px; letter-spacing: 2px; font-weight: 800;
+    color: var(--blue-d);
+    margin-bottom: 12px;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-size: 56px; font-weight: 700; letter-spacing: -2px;
+    line-height: 1.05;
+    margin-bottom: 14px;
+  }
+  .lede {
+    font-size: 18px; color: var(--ink2);
+    line-height: 1.6; max-width: 640px;
+    margin-bottom: 12px;
+  }
+  .updated {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 1.4px;
+    color: var(--ink3); font-weight: 700;
+    margin-top: 24px;
+  }
+
+  .tldr {
+    background: var(--mint);
+    border: 1px solid rgba(31,171,107,0.20);
+    border-radius: 16px;
+    padding: 22px 24px;
+    margin: 36px 0;
+  }
+  .tldr h3 {
+    font-family: var(--mono);
+    font-size: 12px; letter-spacing: 1.6px; font-weight: 800;
+    color: var(--green);
+    margin-bottom: 10px;
+  }
+  .tldr p { font-size: 15px; line-height: 1.55; color: var(--ink); }
+  .tldr p + p { margin-top: 8px; }
+  .tldr strong { color: var(--ink); font-weight: 800; }
+
+  h2 {
+    font-family: var(--serif);
+    font-size: 28px; font-weight: 700; letter-spacing: -0.6px;
+    margin-top: 48px; margin-bottom: 14px;
+  }
+  h3.subsection {
+    font-family: var(--font);
+    font-size: 17px; font-weight: 800;
+    margin-top: 24px; margin-bottom: 8px;
+  }
+  p, li {
+    font-size: 15px; line-height: 1.65;
+    color: var(--ink2);
+    margin-bottom: 12px;
+  }
+  ul { padding-left: 20px; margin-bottom: 12px; }
+  li { margin-bottom: 6px; }
+  strong { color: var(--ink); font-weight: 700; }
+  a { color: var(--blue-d); font-weight: 600; }
+
+  .contact-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px 22px;
+    margin-top: 36px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .contact-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: var(--blue-50); color: var(--blue-d);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .contact-card .ck {
+    font-family: var(--mono);
+    font-size: 10px; letter-spacing: 1.6px; font-weight: 800;
+    color: var(--ink2);
+  }
+  .contact-card a {
+    font-size: 16px; font-weight: 700;
+    color: var(--ink);
+    text-decoration: none;
+    margin-top: 2px;
+    display: block;
+  }
+  .contact-card a:hover { color: var(--blue-d); }
+
+  hr.section-rule {
+    border: 0;
+    border-top: 1px dashed var(--line);
+    margin: 56px 0 0;
+  }
+
+  .footer {
+    padding: 24px 32px;
+    border-top: 1px solid var(--line);
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 11px; letter-spacing: 1.4px;
+    color: var(--ink3);
+    font-weight: 700;
+  }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 36px; letter-spacing: -1px; }
+    .wrap { padding: 32px 18px 60px; }
+  }
+</style>
+  <link rel="stylesheet" href="/assets/css/theme-bridge.css">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+
+<nav class="nav">
+  <a class="nav-back" href="/">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    Back
+  </a>
+  <a class="brand" href="/">Drivee<span class="dot">.</span></a>
+</nav>
+
+<div class="wrap">
+
+  <div class="kicker">PRIVACY · DRIVEE</div>
+  <h1>Your data stays yours.</h1>
+  <p class="lede">Drivee is built so the people who park in Toronto don't trade their privacy for help with a parking ticket. This page explains exactly what we keep, what we don't, and how to wipe everything.</p>
+  <div class="updated">LAST UPDATED · 11 MAY 2026</div>
+
+  <div class="tldr">
+    <h3>✓ THE SHORT VERSION</h3>
+    <p>The only personal information we save on our servers is <strong>your email address</strong> — and only if you give it to us to get reminders or sign in.</p>
+    <p>We also save <strong>anonymous usage signals</strong> so we know which features work — like approximate city, device type, and which buttons get tapped. None of it is sold. None of it leaves our hands.</p>
+    <p>Everything sensitive — your tickets, scans, photos, plate, name — lives on <strong>your device</strong>. We don't read it. We can't see it.</p>
+  </div>
+
+  <h2>What we save</h2>
+
+  <h3 class="subsection">Your email address (only if you give it to us)</h3>
+  <p>There are two moments when you might give us your email:</p>
+  <ul>
+    <li><strong>After you scan a ticket</strong> — we offer to email you 3 days before the fine is due, so you don't pay late fees.</li>
+    <li><strong>When you sign in</strong> to sync Drivee across your phone, tablet, and laptop.</li>
+  </ul>
+  <p>In both cases we send you a one-tap magic link instead of asking for a password. We store the email so we can recognise you next time and send the reminder. <strong>That's it.</strong> No password, no name, no phone number, no payment information.</p>
+
+  <h3 class="subsection">Anonymous usage events</h3>
+  <p>We count things like "someone scanned a ticket", "someone opened the Hotspots tab", or "someone generated a dispute letter" so we know which features work and which to improve. Alongside each event we save a small amount of context so the numbers are meaningful:</p>
+  <ul>
+    <li><strong>Approximate city</strong> — derived from your IP address through a one-shot lookup (e.g. "Toronto, ON"). We never store the IP itself in our database — only the city it resolves to.</li>
+    <li><strong>Device type and browser</strong> — e.g. "Mobile · iOS · Safari" or "Desktop · Windows · Chrome". This is parsed from the standard User-Agent header your browser sends.</li>
+    <li><strong>An anonymous user ID and session ID</strong> — random strings (e.g. <span style="font-family:var(--mono)">u_x7k9q2pmh3z</span>) generated in your browser. They let us see things like "30 unique people opened the app this week" without ever needing your name. If you clear your browser storage, you become a new ID.</li>
+    <li><strong>Your email</strong> — but only on the specific event that records you giving us your email in the first place (the sign-in / reminder request). All other events stay completely anonymous.</li>
+  </ul>
+  <p>None of this data is sold, traded for ads, or shared with anyone outside Drivee. The internal dashboard that reads these numbers is only used by the Drivee team to decide what to build next.</p>
+
+  <h3 class="subsection">A note about Stripe</h3>
+  <p>If you ever use a paid feature (like the optional $0.99 "auto-apply" services), payment is processed entirely by <a href="https://stripe.com/privacy" target="_blank" rel="noopener">Stripe</a> on their own checkout page. We never see your card details. Stripe gives us back only a confirmation that the payment succeeded.</p>
+
+  <h2>What we don't save</h2>
+  <ul>
+    <li><strong>Your tickets and reminders.</strong> Stored in your browser's local storage — on your device only. If you sign in to sync, an encrypted copy lives in our cloud database tied to your email — only your account can read it.</li>
+    <li><strong>Photos of your tickets.</strong> When you scan a ticket, the photo is processed in your browser and only the extracted text leaves your device — and only to read what's on the ticket. We never store the image.</li>
+    <li><strong>Your name, plate, address.</strong> Saved locally so the app remembers you between visits. Never sent to our servers unless you sign in to sync.</li>
+    <li><strong>Your location.</strong> Used live by the GPS Guardian feature to warn you about hotspots. Never logged, never sent anywhere.</li>
+    <li><strong>Your payment information.</strong> Drivee is free. We never collect card details from you. Ticket payments happen on the City of Toronto's own payment portal — we just deep-link you there.</li>
+  </ul>
+
+  <h2>Who else sees your data</h2>
+  <p><strong>Nobody.</strong> We don't sell your data. We don't trade it for ad money. We don't share it with the City of Toronto, the MTO, the courts, or any law firm listed in the app.</p>
+  <p>The lawyers in our directory pay flat fees for placement — they don't get any visitor data from us. When you call or email a lawyer through the app, you do that directly with them; we don't sit in the middle.</p>
+
+  <h2>How to delete everything</h2>
+  <ul>
+    <li><strong>On your device:</strong> Open the Drivee app → tap your avatar → "Sign out and clear local data". This wipes every reminder, scan, and profile detail from your phone or browser.</li>
+    <li><strong>From our cloud:</strong> Email <a href="mailto:drivee.canada@gmail.com">drivee.canada@gmail.com</a> with the subject "Delete my account" from the email you signed in with. We delete your row from our database within 24 hours and confirm by reply.</li>
+  </ul>
+
+  <h2>Children</h2>
+  <p>Drivee is intended for licensed Ontario drivers (18+). We do not knowingly collect data from anyone under 18. If you believe a child has used the app, email us — we'll delete their data immediately.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>We'll update the "Last updated" date at the top of this page when we change anything material. Significant changes will also be flagged inside the app.</p>
+
+  <div class="contact-card">
+    <div class="contact-icon">✉</div>
+    <div>
+      <div class="ck">QUESTIONS · PRIVACY · DELETE REQUESTS</div>
+      <a href="mailto:drivee.canada@gmail.com">drivee.canada@gmail.com</a>
+    </div>
+  </div>
+
+  <hr class="section-rule" id="terms"/>
+
+  <div class="kicker" style="margin-top: 40px;">TERMS OF USE · DRIVEE</div>
+  <h1 style="font-size: 36px;">Plain-English terms.</h1>
+
+  <h2>Drivee is a tool, not legal advice</h2>
+  <p>Drivee helps you organise parking and traffic fines. The dispute scripts, AI verdicts, and ROI calculations are <strong>informational tools to help you decide</strong> — not legal advice. We are not your lawyer. For complex tickets (DUI, stunt driving, plate denial, fines over $200), use the lawyer directory in the app to talk to a real licensed paralegal or lawyer.</p>
+
+  <h2>Drivee is free</h2>
+  <p>Free for life, free to scan, free to dispute. We make money when lawyers in our directory get retained — never from you. There is no subscription, no premium tier, no ads.</p>
+
+  <h2>You own your tickets</h2>
+  <p>You're responsible for paying or disputing your tickets in the time the city allows. Drivee surfaces deadlines, but if you ignore them and your fine escalates, that's between you and the City of Toronto.</p>
+
+  <h2>The app may break</h2>
+  <p>We try to keep the app running, but we make no guarantee of uptime. If a deadline alert fails to fire, that's not a basis to dispute a fine — the city's official notice always wins. Always read the official notice you received.</p>
+
+  <h2>Trademarks</h2>
+  <p>Drivee is not affiliated with the City of Toronto, the Toronto Parking Authority, the MTO, the Ontario Court of Justice, or any private parking enforcement company. Logos and names belong to their owners.</p>
+
+  <div class="contact-card">
+    <div class="contact-icon">⚖</div>
+    <div>
+      <div class="ck">QUESTIONS · TERMS · LEGAL</div>
+      <a href="mailto:drivee.canada@gmail.com">drivee.canada@gmail.com</a>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">© 2026 DRIVEE TECHNOLOGIES INC. · TORONTO, ON</div>
+
+</body>
+</html>

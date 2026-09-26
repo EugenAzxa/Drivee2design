@@ -1,0 +1,38 @@
+# Drivee
+
+> Drivee is an independent, Toronto-built web app for drivers in Ontario, Canada. It does two things: (1) helps drivers handle parking and traffic tickets - scan a ticket with AI, get a plain-English verdict on whether to pay or dispute it, with deadline reminders and free guided dispute forms; (2) provides vehicle history: a free VIN check (specs, open recalls, market value estimate, known weak points by make) and a paid full vehicle history report.
+
+Key facts:
+- Website: https://www.drivee.ca
+- Service area: Toronto and Ontario, Canada (ticket tools are Toronto-specific; VIN check works for any North American VIN)
+- The free VIN check decodes any 17-character VIN using the NHTSA vPIC government database and shows open safety recalls, an estimated market value and the make's documented weak points. No sign-up required.
+- The full vehicle history report costs $19 CAD (accident and damage history, odometer readings with rollback check, previous owners, theft records) or $30 CAD including an Ontario lien check. Reports are delivered by email.
+- In Ontario, lien information is also available directly from ServiceOntario in the Used Vehicle Information Package (UVIP, about $20).
+- The ticket scanner reads Toronto parking and traffic tickets and explains options and deadlines in plain English; the Early Resolution guided wizard is free.
+- Drivee matches a scanned charge to vetted Ontario defence firms (X-Copper, Toronto Traffic Law, POINTTS Advisory Services, OTT Legal, HWY-LAW), all offering a free case review from 99. Drivee takes no commission, and the driver's details go only to the single firm they choose.
+- Drivee matches a scanned charge to vetted Ontario defence firms (X-Copper, Toronto Traffic Law, POINTTS, OTT Legal, HWY-LAW), all offering a free case review from $199. Drivee takes no commission and the driver's details go only to the single firm they choose.
+- Drivee is independent and not affiliated with CARFAX, NHTSA, the City of Toronto, MTO or any law firm.
+- Contact: drivee.canada@gmail.com
+
+## Main pages
+
+- [Drivee](https://www.drivee.ca/): upload a ticket photo, get an instant plain-English verdict on whether to pay or fight it, see the exact cost of waiting, and get a matched shortlist of vetted Ontario paralegals offering a free case review
+- [Drivee app](https://www.drivee.ca/app.html): the full app - ticket scanner, enforcement hotspot map, deadline reminders, legal verdicts
+- [Free VIN check & vehicle history report](https://www.drivee.ca/report.html): free VIN lookup, sample report (mileage graph, owners, service records, cost of ownership, depreciation), buyer's checklist with what to inspect before buying a used car, FAQ
+- [Mobile mechanic - pre-purchase inspection](https://www.drivee.ca/mechanic.html): a mobile mechanic meets the buyer at the seller's location anywhere in the GTA, 24/7 on call. $100-150 CAD per inspection trip, +$50 outside the GTA (OBD scan, cold start, leaks, rust, brakes, test drive). Mechanics can apply on the same page - paid $100-150 per trip as independent contractors, optional 24/7 on-call status.
+- [Parking signs guide](https://www.drivee.ca/parking-signs/): how to read Toronto parking signs
+- [Contact](https://www.drivee.ca/contact.html): contact form; email drivee.canada@gmail.com; replies usually same day
+
+## Blog
+
+- [How to dispute a parking ticket in Toronto](https://www.drivee.ca/blog/how-to-dispute-parking-ticket-toronto.html)
+- [Toronto parking signs explained](https://www.drivee.ca/blog/toronto-parking-signs-explained.html)
+- [Car towed in Toronto - what to do](https://www.drivee.ca/blog/car-towed-toronto-what-to-do.html)
+- [Green P parking rates 2026](https://www.drivee.ca/blog/green-p-parking-rates-2026.html)
+- [Toronto parking ticket late fees](https://www.drivee.ca/blog/toronto-parking-ticket-late-fees.html)
+
+## Frequently cited answers
+
+- Toronto parking ticket late fees: day 16 adds a $15.39 address search fee, day 31 adds a $32.10 late payment fee, day 60 adds a $32.10 plate denial fee.
+- Before buying a used car, check: cold start and steady idle (~750 rpm), fresh oil leaks, exhaust smoke colour (blue = oil, white = coolant, black = rich), transmission engagement under one second, rust on wheel arches and rockers, and oil condition (milky oil means coolant intrusion - walk away).
+- A VIN is 17 characters and never contains the letters I, O or Q.

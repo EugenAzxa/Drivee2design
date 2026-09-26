@@ -1,0 +1,1172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <meta name="robots" content="noindex, nofollow"/>
+  <title>Drivee · Forecast (target metrics)</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231A3FB8'/%3E%3Ctext x='16' y='22' font-family='monospace' font-size='16' font-weight='800' text-anchor='middle' fill='white'%3ED.%3C/text%3E%3C/svg%3E"/>
+  <style>
+    :root {
+      --blue: #1A3FB8;
+      --blue-d: #0E1B3D;
+      --blue-50: #e9efff;
+      --paper: #ffffff;
+      --canvas: #f6f4ee;
+      --line: #e3dfd4;
+      --ink: #0e1b3d;
+      --ink2: #5a6075;
+      --green: #1FAB6B;
+      --amber: #FFC857;
+      --red: #FF6B6B;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter Tight', 'Segoe UI', Roboto, sans-serif;
+      background: var(--canvas);
+      color: var(--ink);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 24px 18px 80px; }
+
+    /* ── header ── */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; margin-bottom: 22px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-logo {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--blue), var(--blue-d));
+      color: white; display: grid; place-items: center;
+      font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 14px;
+      box-shadow: 0 6px 14px -4px rgba(26,63,184,0.4);
+    }
+    .brand-text {
+      font-family: Georgia, 'IBM Plex Serif', serif;
+      font-size: 22px; font-weight: 700; letter-spacing: -0.4px;
+    }
+    .brand-tag {
+      font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+      color: var(--blue); margin-top: 2px;
+    }
+    .toolbar { display: flex; align-items: center; gap: 8px; }
+    .btn {
+      background: var(--paper); color: var(--blue-d);
+      border: 1px solid var(--line); border-radius: 10px;
+      padding: 8px 12px;
+      font: 600 13px/1 inherit; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn:hover { background: var(--blue-50); border-color: var(--blue); }
+    .btn.primary { background: var(--blue); color: white; border-color: var(--blue); }
+    .btn.primary:hover { background: var(--blue-d); }
+    .updated {
+      font-size: 11px; color: var(--ink2);
+      font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px;
+    }
+    /* Forecast page: static amber dot, no pulse — this is target data, not a live feed. */
+    .live-dot {
+      display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+      background: #E89B22; margin-right: 6px;
+      vertical-align: 1px;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.35; }
+    }
+
+    /* ── tiles (totals) ── */
+    .tiles {
+      display: grid; gap: 12px;
+      grid-template-columns: repeat(4, 1fr);
+      margin-bottom: 22px;
+    }
+    .tiles-5 { grid-template-columns: repeat(5, 1fr); }
+    @media (max-width: 900px) { .tiles-5 { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 700px) {
+      .tiles    { grid-template-columns: repeat(2, 1fr); }
+      .tiles-5  { grid-template-columns: repeat(2, 1fr); }
+    }
+    .tile {
+      background: var(--paper); border: 1px solid var(--line);
+      border-radius: 16px; padding: 16px;
+    }
+    .tile-label {
+      font-size: 11px; font-weight: 800; letter-spacing: 1.5px;
+      color: var(--ink2); text-transform: uppercase;
+    }
+    .tile-value {
+      font-family: 'IBM Plex Serif', Georgia, serif;
+      font-size: 38px; font-weight: 700; letter-spacing: -1px;
+      margin-top: 4px; line-height: 1.05;
+    }
+    .tile-sub { font-size: 12px; color: var(--ink2); margin-top: 4px; }
+    .tile.accent { background: linear-gradient(135deg, var(--blue), var(--blue-d)); color: white; border: 0; }
+    .tile.accent .tile-label, .tile.accent .tile-sub { color: rgba(255,255,255,0.78); }
+
+    /* ── card / sections ── */
+    .grid {
+      display: grid; gap: 16px;
+      grid-template-columns: 1fr 1fr;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--paper); border: 1px solid var(--line);
+      border-radius: 16px; padding: 18px;
+    }
+    .card-title {
+      font-size: 12px; font-weight: 800; letter-spacing: 1.5px;
+      color: var(--ink2); text-transform: uppercase;
+      margin-bottom: 14px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .card-title .hint { font-weight: 500; color: var(--ink2); letter-spacing: 0.3px; text-transform: none; }
+
+    /* ── bar list (top events / top tabs) ── */
+    .bar-list { display: flex; flex-direction: column; gap: 8px; }
+    .bar-row {
+      display: grid; grid-template-columns: 130px 1fr 50px;
+      align-items: center; gap: 10px;
+      font-size: 13px;
+    }
+    .bar-name {
+      font-weight: 700; color: var(--ink);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .bar-track {
+      height: 10px; border-radius: 5px;
+      background: var(--blue-50); overflow: hidden; position: relative;
+    }
+    .bar-fill {
+      height: 100%; background: linear-gradient(90deg, var(--blue), var(--blue-d));
+      border-radius: 5px; transition: width 0.5s ease;
+    }
+    .bar-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700; font-size: 12px;
+      text-align: right; color: var(--ink);
+    }
+
+    /* ── daily trend ── */
+    .trend {
+      display: grid; grid-template-columns: repeat(14, 1fr);
+      gap: 6px; align-items: end;
+      height: 140px;
+      padding: 6px 0;
+    }
+    .trend-col {
+      display: flex; flex-direction: column; align-items: center;
+      height: 100%; justify-content: flex-end;
+      cursor: default;
+    }
+    .trend-bar {
+      width: 100%; background: linear-gradient(180deg, var(--blue), var(--blue-d));
+      border-radius: 4px 4px 0 0;
+      min-height: 2px;
+      transition: height 0.5s ease;
+    }
+    .trend-bar.zero { background: var(--line); }
+    .trend-day {
+      font-size: 9px; font-family: 'JetBrains Mono', monospace;
+      color: var(--ink2); margin-top: 4px; letter-spacing: 0.3px;
+    }
+    .trend-count {
+      font-size: 10px; font-family: 'JetBrains Mono', monospace;
+      font-weight: 700; color: var(--ink); margin-bottom: 4px;
+    }
+
+    /* ── funnel ── */
+    .funnel { display: flex; flex-direction: column; gap: 8px; }
+    .funnel-step {
+      display: grid; grid-template-columns: 130px 1fr 70px;
+      align-items: center; gap: 10px;
+      font-size: 13px;
+    }
+    .funnel-name { font-weight: 700; }
+    .funnel-track {
+      height: 24px; background: var(--blue-50); border-radius: 6px;
+      overflow: hidden; position: relative;
+    }
+    .funnel-fill {
+      height: 100%; background: linear-gradient(90deg, var(--blue), var(--blue-d));
+      display: flex; align-items: center; justify-content: flex-end;
+      padding-right: 8px; color: white; font-size: 11px; font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      transition: width 0.6s ease;
+    }
+    .funnel-pct {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700; font-size: 12px;
+      color: var(--ink2); text-align: right;
+    }
+
+    /* ── recent activity ── */
+    .feed { display: flex; flex-direction: column; }
+    .feed-row {
+      display: grid; grid-template-columns: 28px 1fr auto;
+      gap: 10px; padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+      align-items: center;
+    }
+    .feed-row:last-child { border-bottom: 0; }
+    .feed-icon {
+      width: 28px; height: 28px; border-radius: 8px;
+      display: grid; place-items: center;
+      background: var(--blue-50);
+      font-size: 14px;
+    }
+    .feed-text { min-width: 0; }
+    .feed-event {
+      font-weight: 700; font-size: 13px; color: var(--ink);
+    }
+    .feed-meta {
+      font-size: 11px; color: var(--ink2);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .feed-time {
+      font-size: 11px; color: var(--ink2);
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+    }
+
+    /* ── signup list ── */
+    .signup-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+      align-items: center;
+    }
+    .signup-row:last-child { border-bottom: 0; }
+    .signup-email {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .signup-source {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: var(--blue-50);
+      color: var(--blue-d);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .signup-source.loss-cta { background: rgba(217,119,6,0.15); color: #b45309; }
+    .signup-source.main     { background: var(--blue-50);       color: var(--blue-d); }
+    .signup-source.sheet    { background: rgba(122,92,240,0.15); color: #6B4EE0; }
+    .signup-when {
+      font-size: 11px;
+      color: var(--ink2);
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+    }
+
+    /* ── account split bar ── */
+    .split {
+      display: flex; height: 32px;
+      border-radius: 10px; overflow: hidden;
+      border: 1px solid var(--line);
+    }
+    .split-seg {
+      display: flex; align-items: center; justify-content: center;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; font-weight: 800; color: white;
+      letter-spacing: 0.5px;
+      transition: flex 0.6s ease;
+    }
+    .split-seg.authed { background: linear-gradient(90deg, var(--blue), var(--blue-d)); }
+    .split-seg.anon   { background: #c9c4b3; color: var(--ink); }
+    .split-empty {
+      flex: 1;
+      display: grid; place-items: center;
+      font-size: 12px; color: var(--ink2);
+    }
+    .split-legend {
+      display: flex; gap: 18px;
+      margin-top: 10px;
+      font-size: 12px; color: var(--ink2);
+    }
+    .split-legend span { display: flex; align-items: center; gap: 6px; }
+    .split-legend i { width: 10px; height: 10px; border-radius: 3px; }
+    .split-legend i.authed { background: var(--blue); }
+    .split-legend i.anon   { background: #c9c4b3; }
+
+    /* ── recent feed: extra context line ── */
+    .feed-context {
+      font-size: 11px; color: var(--ink2);
+      font-family: 'JetBrains Mono', monospace;
+      margin-top: 2px;
+    }
+    .feed-context .pill {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: var(--blue-50);
+      color: var(--blue-d);
+      margin-right: 4px;
+      font-weight: 700;
+    }
+    .feed-context .pill.auth { background: rgba(31,171,107,0.18); color: #0d6e44; }
+    .feed-context .pill.anon { background: #f0ece0; color: var(--ink2); }
+
+    /* ── error banner ── */
+    .err {
+      display: none;
+      background: #fff1f0; border: 1px solid #ffb8b3;
+      color: #9b1c0e; border-radius: 12px;
+      padding: 12px 14px; margin-bottom: 14px;
+      font-family: 'JetBrains Mono', monospace; font-size: 12px;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .err.show { display: block; }
+    .err b { font-family: -apple-system, 'Inter Tight', sans-serif; font-weight: 800; }
+
+    /* ── coverage notice (info, not error) ── */
+    .notice {
+      display: none;
+      background: #fff8e7; border: 1px solid #f5cf73;
+      color: #7a4f00; border-radius: 12px;
+      padding: 12px 14px; margin-bottom: 14px;
+      font-size: 12px; line-height: 1.5;
+    }
+    .notice.show { display: block; }
+    .notice b { font-weight: 800; }
+
+    /* ── empty / loading ── */
+    .empty {
+      text-align: center; color: var(--ink2);
+      font-size: 13px; padding: 30px 0;
+    }
+    .skeleton {
+      animation: skel 1.4s ease-in-out infinite;
+      background: linear-gradient(90deg, var(--canvas), var(--blue-50), var(--canvas));
+      background-size: 200% 100%;
+      border-radius: 6px;
+    }
+    @keyframes skel {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+  </style>
+</head>
+<body>
+
+<!-- ─────────── DASHBOARD ─────────── -->
+<div id="app" class="wrap">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-logo">D.</div>
+      <div>
+        <div class="brand-text">Drivee Analytics</div>
+        <div class="brand-tag" style="background:rgba(245,158,11,0.12);color:#b07514">FORECAST · TARGETS</div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <span id="updated" class="updated"><span class="live-dot"></span>target metrics</span>
+      <button class="btn" type="button" onclick="loadStats()" title="Refresh now">↻ Refresh</button>
+    </div>
+  </div>
+
+  <!-- Error banner -->
+  <div id="err" class="err"></div>
+
+  <!-- Coverage notice (shown when 60-day window can't be fully filled) -->
+  <div id="coverage" class="notice"></div>
+
+  <!-- Real users — most-prominent row -->
+  <div class="tiles tiles-5" id="tiles-users" style="margin-bottom: 14px">
+    <div class="tile accent">
+      <div class="tile-label">People · today</div>
+      <div class="tile-value" id="tile-users-today">—</div>
+      <div class="tile-sub">unique humans · last 24h</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">People · 7 days</div>
+      <div class="tile-value" id="tile-users-7d">—</div>
+      <div class="tile-sub">rolling week</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">People · 30 days</div>
+      <div class="tile-value" id="tile-users-30d">—</div>
+      <div class="tile-sub">rolling month</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">People · 2 months</div>
+      <div class="tile-value" id="tile-users-60d">—</div>
+      <div class="tile-sub">rolling 60 days</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">People · all-time</div>
+      <div class="tile-value" id="tile-users-all">—</div>
+      <div class="tile-sub" id="tile-users-all-sub">tried the app at least once</div>
+    </div>
+  </div>
+
+  <!-- Events totals -->
+  <div class="tiles tiles-5" id="tiles">
+    <div class="tile">
+      <div class="tile-label">Events · today</div>
+      <div class="tile-value" id="tile-today">—</div>
+      <div class="tile-sub">all event types · last 24h</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Events · 7 days</div>
+      <div class="tile-value" id="tile-7d">—</div>
+      <div class="tile-sub">rolling week</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Events · 30 days</div>
+      <div class="tile-value" id="tile-30d">—</div>
+      <div class="tile-sub">rolling month</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Events · 2 months</div>
+      <div class="tile-value" id="tile-60d">—</div>
+      <div class="tile-sub">rolling 60 days</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Events · all-time</div>
+      <div class="tile-value" id="tile-all">—</div>
+      <div class="tile-sub">events stored</div>
+    </div>
+  </div>
+
+  <!-- Sessions row -->
+  <div class="tiles" style="margin-bottom: 22px">
+    <div class="tile">
+      <div class="tile-label">Sessions</div>
+      <div class="tile-value" id="tile-sessions">—</div>
+      <div class="tile-sub">unique tab visits</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Avg time on app</div>
+      <div class="tile-value" id="tile-avg-dur">—</div>
+      <div class="tile-sub">mean per session</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Median time</div>
+      <div class="tile-value" id="tile-median-dur">—</div>
+      <div class="tile-sub">half above, half below</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Longest session</div>
+      <div class="tile-value" id="tile-longest-dur">—</div>
+      <div class="tile-sub">all-time max</div>
+    </div>
+  </div>
+
+  <!-- Email signups (people who gave us their email) -->
+  <div class="tiles tiles-5" style="margin-bottom: 14px">
+    <div class="tile">
+      <div class="tile-label">Emails · all-time</div>
+      <div class="tile-value" id="tile-emails-all">—</div>
+      <div class="tile-sub">unique addresses captured</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Emails · today</div>
+      <div class="tile-value" id="tile-emails-today">—</div>
+      <div class="tile-sub">new in last 24h</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Emails · 7 days</div>
+      <div class="tile-value" id="tile-emails-7d">—</div>
+      <div class="tile-sub">rolling week</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Emails · 30 days</div>
+      <div class="tile-value" id="tile-emails-30d">—</div>
+      <div class="tile-sub">rolling month</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Emails · 2 months</div>
+      <div class="tile-value" id="tile-emails-60d">—</div>
+      <div class="tile-sub">rolling 60 days</div>
+    </div>
+  </div>
+
+  <!-- Sign-in methods -->
+  <div class="card" style="margin-bottom: 16px">
+    <div class="card-title">
+      <span>Sign-in methods</span>
+      <span class="hint">how people authenticate</span>
+    </div>
+    <div class="bar-list" id="signin-methods"></div>
+  </div>
+
+  <!-- Signup list -->
+  <div class="card" style="margin-bottom: 16px">
+    <div class="card-title">
+      <span>Email signups</span>
+      <span class="hint">most recent first · up to 50</span>
+    </div>
+    <div id="signup-list"></div>
+  </div>
+
+  <!-- Account split -->
+  <div class="card" style="margin-bottom: 16px">
+    <div class="card-title">
+      <span>Account status</span>
+      <span class="hint">signed-in vs anonymous · sessions</span>
+    </div>
+    <div class="split" id="auth-split"></div>
+  </div>
+
+  <!-- Daily trend -->
+  <div class="card" style="margin-bottom: 16px">
+    <div class="card-title">
+      <span>Daily trend · last 14 days</span>
+      <span class="hint">UTC days</span>
+    </div>
+    <div class="trend" id="trend"></div>
+  </div>
+
+  <!-- Top events + Top tabs -->
+  <div class="grid">
+    <div class="card">
+      <div class="card-title">
+        <span>Top events</span>
+        <span class="hint">all-time</span>
+      </div>
+      <div class="bar-list" id="top-events"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        <span>Top tabs clicked</span>
+        <span class="hint">tab_click → tab</span>
+      </div>
+      <div class="bar-list" id="top-tabs"></div>
+    </div>
+  </div>
+
+  <!-- Top cities + Top devices -->
+  <div class="grid">
+    <div class="card">
+      <div class="card-title">
+        <span>Where users are</span>
+        <span class="hint">approx. from IP</span>
+      </div>
+      <div class="bar-list" id="top-cities"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        <span>Devices</span>
+        <span class="hint">form-factor · OS</span>
+      </div>
+      <div class="bar-list" id="top-devices"></div>
+    </div>
+  </div>
+
+  <!-- Browsers -->
+  <div class="card" style="margin-bottom: 16px">
+    <div class="card-title">
+      <span>Browsers</span>
+      <span class="hint">events seen from each</span>
+    </div>
+    <div class="bar-list" id="top-browsers"></div>
+  </div>
+
+  <!-- Funnel -->
+  <div class="card" style="margin-bottom: 16px">
+    <div class="card-title">
+      <span>Conversion funnel</span>
+      <span class="hint">% of app opens</span>
+    </div>
+    <div class="funnel" id="funnel"></div>
+  </div>
+
+  <!-- Recent feed -->
+  <div class="card">
+    <div class="card-title">
+      <span>Recent activity</span>
+      <span class="hint">last 30 events · newest first</span>
+    </div>
+    <div class="feed" id="feed"></div>
+  </div>
+
+</div>
+
+<script>
+  var REFRESH_MS = 30000;
+
+  // ─── FORECAST DATA — static target metrics, NOT real production numbers ───
+  // This page is a forecast/target mockup. No Supabase fetch. All numbers
+  // below are hardcoded targets used in pitch materials and design previews.
+  // Real production numbers live on /analytics.html which IS Supabase-backed.
+  // ─── Auto-growth ─────────────────────────────────────────────────
+  // Baseline snapshot taken 2026-06-25: 1,450 cumulative users, 249
+  // emails. Each subsequent day ticks both up by a deterministic 1-3
+  // (typically 2-3, occasionally 1) so the dashboard grows slowly
+  // between manual edits. Increments are date-seeded — same number for
+  // everyone viewing on the same day, no random shuffling.
+  function _dayInc(date, salt) {
+    var d = new Date(date);
+    var seed = ((d.getUTCFullYear() * 31) + ((d.getUTCMonth() + 1) * 17) + d.getUTCDate()) * salt;
+    var v = ((seed % 10) + 10) % 10;
+    if (v < 2) return 1;
+    if (v < 6) return 2;
+    return 3;
+  }
+  function _growth(baseDate, salt) {
+    var base = new Date(baseDate + 'T00:00:00Z');
+    var now  = new Date(); now.setUTCHours(0,0,0,0);
+    var days = Math.max(0, Math.round((now.getTime() - base.getTime()) / 86400000));
+    var total = 0;
+    for (var i = 1; i <= days; i++) {
+      total += _dayInc(new Date(base.getTime() + i * 86400000), salt);
+    }
+    return total;
+  }
+  var _GROWTH_BASE   = '2026-06-25';
+  var _USERS_GROWTH  = _growth(_GROWTH_BASE,  7);
+  var _EMAILS_GROWTH = _growth(_GROWTH_BASE, 13);
+  var _TODAY_EMAILS  = _dayInc(new Date(), 13);
+
+  // ─── Recent-signups picker ───────────────────────────────────────
+  // The recent-signups feed used to be a hardcoded list, so the same
+  // 6 emails ("a.kennedy" etc.) sat at the top forever. Now we pick
+  // 6 from a larger pool keyed off today's UTC date — fresh roster
+  // every day, deterministic for everyone viewing on the same day.
+  var _SIGNUP_POOL = [
+    { user: 'm.leung',   provider: 'outlook.com', source: 'main' },
+    { user: 'ravi.s',    provider: 'yahoo.ca',    source: 'sheet' },
+    { user: 'tina.w',    provider: 'gmail.com',   source: 'google' },
+    { user: 'd.brown',   provider: 'hotmail.com', source: 'main' },
+    { user: 'priya.k',   provider: 'gmail.com',   source: 'code' },
+    { user: 's.chen',    provider: 'outlook.com', source: 'main' },
+    { user: 'jordan.m',  provider: 'gmail.com',   source: 'google' },
+    { user: 'f.alves',   provider: 'hotmail.com', source: 'main' },
+    { user: 'e.garcia',  provider: 'gmail.com',   source: 'loss-cta' },
+    { user: 't.okafor',  provider: 'outlook.com', source: 'sheet' },
+    { user: 'mira.b',    provider: 'gmail.com',   source: 'google' },
+    { user: 'd.huang',   provider: 'outlook.com', source: 'main' },
+    { user: 'yusuf.r',   provider: 'gmail.com',   source: 'code' },
+    { user: 'l.murphy',  provider: 'hotmail.com', source: 'main' },
+    { user: 'a.sharma',  provider: 'gmail.com',   source: 'main' },
+    { user: 'chen.h',    provider: 'yahoo.ca',    source: 'google-start' },
+    { user: 'nina.p',    provider: 'outlook.com', source: 'main' },
+    { user: 'omar.d',    provider: 'gmail.com',   source: 'loss-cta' },
+    { user: 'kate.s',    provider: 'gmail.com',   source: 'google' },
+    { user: 'raj.p',     provider: 'hotmail.com', source: 'main' },
+    { user: 'emily.l',   provider: 'gmail.com',   source: 'sheet' },
+    { user: 'ben.k',     provider: 'outlook.com', source: 'code' },
+    { user: 'amir.s',    provider: 'gmail.com',   source: 'main' }
+  ];
+  function _pickDailySignups(date) {
+    var d = new Date(date);
+    var seed = ((d.getUTCFullYear() * 31) + ((d.getUTCMonth() + 1) * 17) + d.getUTCDate()) * 13;
+    var taken = {}, picked = [];
+    for (var i = 0; picked.length < 6 && i < _SIGNUP_POOL.length * 3; i++) {
+      var idx = (((seed + i * 7) % _SIGNUP_POOL.length) + _SIGNUP_POOL.length) % _SIGNUP_POOL.length;
+      if (taken[idx]) continue;
+      taken[idx] = 1;
+      picked.push(_SIGNUP_POOL[idx]);
+    }
+    // Stagger the timestamps so the feed reads naturally over the last ~2 days
+    var hours = [2, 5, 11, 20, 36, 53];
+    var now = Date.now();
+    return picked.map(function(p, i) {
+      return {
+        email: p.user + '@' + p.provider,
+        source: p.source,
+        attempts: (i === 4) ? 2 : 1,
+        firstAt: new Date(now - hours[i] * 60 * 60 * 1000).toISOString()
+      };
+    });
+  }
+  var _RECENT_SIGNUPS = _pickDailySignups(new Date());
+
+  var FORECAST_DATA = {
+    coverageDays: 60,
+    fetchCapped: false,
+    // Daily active users / window snapshots
+    users: {
+      today:    14,
+      last7d:   240,
+      last30d:  720,
+      last60d:  1100,
+      allTime:  1450 + _USERS_GROWTH,
+      triedTotal: 1450 + _USERS_GROWTH,
+      appOpens: 5410
+    },
+    // Total event counts
+    totals: {
+      today:    35,
+      last7d:   4000,
+      last30d:  12700,
+      last60d:  21000,
+      allTime:  23500
+    },
+    // Email signups / waiting list
+    signups: {
+      totalEmails: 249 + _EMAILS_GROWTH,
+      today:    _TODAY_EMAILS,
+      last7d:   18,
+      last30d:  75,
+      last60d:  150,
+      recent: _RECENT_SIGNUPS
+    },
+    sessions: { total: 4280, avg: 162, median: 124, longest: 1840 },
+    auth:     { authedSessions: 1830, anonSessions: 2450 },
+    signinMethods: [
+      { key: 'google',       count: 168 },
+      { key: 'code',         count:  84 },
+      { key: 'loss-cta',     count:  31 },
+      { key: 'sheet',        count:  12 },
+      { key: 'google-start', count:   5 }
+    ],
+    byEvent: [
+      { key: 'app_open',          count: 9460 },
+      { key: 'tab_click',         count: 7820 },
+      { key: 'scan_ticket',       count: 1740 },
+      { key: 'scan_success',      count: 1620 },
+      { key: 'magic_link_sent',   count:  300 },
+      { key: 'reminder_added',    count: 1110 },
+      { key: 'dispute_generated', count:  470 },
+      { key: 'true_cost_calc',    count:  390 },
+      { key: 'profile_saved',     count:  640 },
+      { key: 'share_ticket',      count:  210 },
+      { key: 'report_created',    count:   88 },
+      { key: 'gps_started',       count:  610 },
+      { key: 'lawyer_lead',       count:   42 }
+    ],
+    byTab: [
+      { key: 'tab-dashboard', count: 7820 },
+      { key: 'tab-services',  count: 3210 },
+      { key: 'tab-hotspots',  count: 2640 },
+      { key: 'tab-legal',     count: 1980 },
+      { key: 'tab-guide',     count:  580 }
+    ],
+    byCity: [
+      { key: 'Toronto',         count: 1840 },
+      { key: 'Mississauga',     count:  180 },
+      { key: 'North York',      count:   72 },
+      { key: 'Scarborough',     count:   38 },
+      { key: 'Etobicoke',       count:   20 }
+    ],
+    byDevice: [
+      { key: 'iPhone',   count: 1320 },
+      { key: 'Android',  count:  640 },
+      { key: 'Desktop',  count:  190 }
+    ],
+    byBrowser: [
+      { key: 'Safari (iOS)',  count: 1310 },
+      { key: 'Chrome Mobile', count:  590 },
+      { key: 'Chrome',        count:  150 },
+      { key: 'Edge',          count:   25 },
+      { key: 'Firefox',       count:   15 }
+    ],
+    dailyTrend: (function() {
+      // Hand-tuned 14-day scrappy growth: quiet early days, a couple of dips
+      // for weekends, a few sparks, and a climb into the last few days.
+      // Index 0 = oldest, 13 = today.
+      var counts = [47, 27, 94, 376, 847, 614, 438, 113, 217, 153, 102, 73, 88, 31];
+      var trend = [];
+      var DAYS  = 14;
+      var today = new Date();
+      for (var i = DAYS - 1; i >= 0; i--) {
+        var d   = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+        var idx = DAYS - 1 - i;
+        trend.push({ date: d.toISOString().slice(0,10), count: counts[idx] });
+      }
+      return trend;
+    })(),
+    funnel: {
+      app_open:          9460,
+      scan_ticket:       1740,
+      scan_success:      1620,
+      dispute_generated:  470
+    },
+    recent: (function() {
+      var events = [
+        { event: 'scan_success',      meta: 'parking · Toronto',         authed: true,  city: 'Toronto',     device: 'iPhone',  browser: 'Safari (iOS)' },
+        { event: 'lawyer_lead',       meta: 'OTT Legal · evening',       authed: true,  city: 'Toronto',     device: 'iPhone',  browser: 'Safari (iOS)' },
+        { event: 'reminder_added',    meta: 'TPA-481923 due 2026-06-22', authed: false, city: 'Mississauga', device: 'Android', browser: 'Chrome Mobile' },
+        { event: 'magic_link_sent',   meta: (_RECENT_SIGNUPS[0] && _RECENT_SIGNUPS[0].email) || '', authed: false, city: 'Toronto',     device: 'iPhone',  browser: 'Safari (iOS)' },
+        { event: 'dispute_generated', meta: 'hours',                     authed: true,  city: 'Toronto',     device: 'Desktop', browser: 'Chrome' },
+        { event: 'scan_ticket',       meta: 'distracted',                authed: false, city: 'North York',  device: 'iPhone',  browser: 'Safari (iOS)' },
+        { event: 'app_open',          meta: '',                          authed: false, city: 'Toronto',     device: 'Android', browser: 'Chrome Mobile' },
+        { event: 'true_cost_calc',    meta: 'speeding_mid · $295',       authed: true,  city: 'Toronto',     device: 'iPhone',  browser: 'Safari (iOS)' }
+      ];
+      var now = Date.now();
+      return events.map(function(e, i) {
+        e.created_at = new Date(now - (i + 1) * 7 * 60 * 1000).toISOString();
+        return e;
+      });
+    })()
+  };
+
+  function loadStats() {
+    setUpdated('—');
+    hideError();
+    render(FORECAST_DATA);
+    setUpdated(timeAgo(new Date()));
+  }
+  function hideError() {
+    var el = document.getElementById('err');
+    el.classList.remove('show');
+    el.innerHTML = '';
+  }
+
+  // Show a small amber banner when the 60-day window isn't fully covered
+  // (either because the app is younger than 60 days, or the fetch limit
+  // hit the cap before reaching 60 days back).
+  function renderCoverageNotice(d) {
+    var el = document.getElementById('coverage');
+    if (!el) return;
+    var days = (d && typeof d.coverageDays === 'number') ? d.coverageDays : 60;
+    var capped = !!(d && d.fetchCapped);
+    if (days >= 60 && !capped) {
+      el.classList.remove('show');
+      el.innerHTML = '';
+      return;
+    }
+    var msg;
+    if (capped) {
+      msg = '<b>⚠ Fetch capped at ' + fmt(d.fetchLimit) + ' events.</b> ' +
+            'The 2-month numbers only cover the last <b>' + days + ' day' + (days === 1 ? '' : 's') + '</b> of data ' +
+            '— raise FETCH_LIMIT in api/stats.js or add pagination to see further back.';
+    } else {
+      msg = '<b>ℹ Only ' + days + ' day' + (days === 1 ? '' : 's') + ' of data so far.</b> ' +
+            '2-month tiles will catch up as events keep coming in.';
+    }
+    el.innerHTML = msg;
+    el.classList.add('show');
+  }
+
+  function setUpdated(label) {
+    // Static forecast page — the label is always "target metrics" so a viewer
+    // never sees a live-feed timestamp on a non-live page.
+    document.getElementById('updated').innerHTML = '<span class="live-dot"></span>target metrics';
+  }
+  function renderError(msg) {
+    var el = document.getElementById('err');
+    el.classList.add('show');
+    el.innerHTML = '<b>⚠ Couldn\'t load stats.</b>\n' + esc(msg);
+    console.error('[analytics] loadStats error:', msg);
+  }
+
+  // ─── Rendering ───
+  function render(d) {
+    // Users (top-most row): unique humans who used the app in each window
+    var u = d.users || { today:0, last7d:0, last30d:0, last60d:0, allTime:0, triedTotal:0 };
+    document.getElementById('tile-users-today').textContent = fmt(u.today);
+    document.getElementById('tile-users-7d').textContent    = fmt(u.last7d);
+    document.getElementById('tile-users-30d').textContent   = fmt(u.last30d);
+    document.getElementById('tile-users-60d').textContent   = fmt(u.last60d);
+    document.getElementById('tile-users-all').textContent   = fmt(u.allTime);
+    var allSub = document.getElementById('tile-users-all-sub');
+    if (allSub) {
+      var tried = u.triedTotal || 0;
+      var opens = u.appOpens || 0;
+      allSub.textContent = tried + ' opened the app · ' + opens + ' total opens';
+    }
+
+    // Event totals
+    document.getElementById('tile-today').textContent = fmt(d.totals.today);
+    document.getElementById('tile-7d').textContent    = fmt(d.totals.last7d);
+    document.getElementById('tile-30d').textContent   = fmt(d.totals.last30d);
+    document.getElementById('tile-60d').textContent   = fmt(d.totals.last60d);
+    document.getElementById('tile-all').textContent   = fmt(d.totals.allTime);
+
+    // Email signups
+    var sg = d.signups || { totalEmails:0, today:0, last7d:0, last30d:0, last60d:0, recent:[] };
+    document.getElementById('tile-emails-all').textContent   = fmt(sg.totalEmails);
+    document.getElementById('tile-emails-today').textContent = fmt(sg.today);
+    document.getElementById('tile-emails-7d').textContent    = fmt(sg.last7d);
+    document.getElementById('tile-emails-30d').textContent   = fmt(sg.last30d);
+    document.getElementById('tile-emails-60d').textContent   = fmt(sg.last60d);
+
+    // Forecast page: no live-coverage warning — numbers are static targets.
+
+    // Sign-in methods breakdown
+    var methods = d.signinMethods || [];
+    var maxM = Math.max.apply(null, methods.map(function(x){ return x.count; })) || 1;
+    var methodsEl = document.getElementById('signin-methods');
+    if (methodsEl) {
+      if (!methods.length) {
+        methodsEl.innerHTML = '<div class="empty">No sign-ins yet.</div>';
+      } else {
+        var METHOD_LABELS = {
+          'google': '🟢 Google', 'google-start': '🟡 Google (started)',
+          'code': '✉️ Email code', 'email': '✉️ Email',
+          'loss-cta': '🎟️ After-scan reminder', 'main': '🏠 Dashboard card',
+          'sheet': '👤 Profile sheet', 'unknown': '• Other'
+        };
+        methodsEl.innerHTML = methods.map(function(x){
+          var label = METHOD_LABELS[x.key] || x.key;
+          return rowHTML(label, (x.count/maxM)*100, x.count);
+        }).join('');
+      }
+    }
+
+    var listEl = document.getElementById('signup-list');
+    if (!sg.recent.length) {
+      listEl.innerHTML = '<div class="empty">No email signups yet.</div>';
+    } else {
+      listEl.innerHTML = sg.recent.map(function(s){
+        var srcClass = String(s.source || '').replace(/[^a-z-]/g, '');
+        var attempts = s.attempts > 1 ? ' · ' + s.attempts + 'x' : '';
+        return '' +
+          '<div class="signup-row">' +
+            '<div class="signup-email">' + esc(s.email) + '</div>' +
+            '<div class="signup-source ' + srcClass + '">' + esc(s.source || 'unknown') + attempts + '</div>' +
+            '<div class="signup-when">' + timeAgo(new Date(s.firstAt)) + '</div>' +
+          '</div>';
+      }).join('');
+    }
+
+    // Sessions tiles
+    var ss = d.sessions || { total:0, avg:0, median:0, longest:0 };
+    document.getElementById('tile-sessions').textContent     = fmt(ss.total);
+    document.getElementById('tile-avg-dur').textContent      = fmtDur(ss.avg);
+    document.getElementById('tile-median-dur').textContent   = fmtDur(ss.median);
+    document.getElementById('tile-longest-dur').textContent  = fmtDur(ss.longest);
+
+    // Auth split bar (sessions: signed-in vs anonymous)
+    var splitEl = document.getElementById('auth-split');
+    var authed = (d.auth && d.auth.authedSessions) || 0;
+    var anon   = (d.auth && d.auth.anonSessions) || 0;
+    var totalS = authed + anon;
+    if (!totalS) {
+      splitEl.innerHTML = '<div class="split-empty">No session data yet.</div>';
+    } else {
+      var authedPct = (authed / totalS) * 100;
+      var anonPct   = (anon / totalS) * 100;
+      splitEl.innerHTML =
+        '<div class="split">' +
+          (authed ? '<div class="split-seg authed" style="flex:' + authed + '">✓ ' + authed + '</div>' : '') +
+          (anon   ? '<div class="split-seg anon"   style="flex:' + anon   + '">○ ' + anon   + '</div>' : '') +
+        '</div>' +
+        '<div class="split-legend">' +
+          '<span><i class="authed"></i>Signed-in users · ' + authedPct.toFixed(1) + '%</span>' +
+          '<span><i class="anon"></i>Anonymous · ' + anonPct.toFixed(1) + '%</span>' +
+        '</div>';
+    }
+
+    // top events
+    var maxE = Math.max.apply(null, d.byEvent.map(function(x){ return x.count; })) || 1;
+    var teEl = document.getElementById('top-events');
+    if (!d.byEvent.length) {
+      teEl.innerHTML = '<div class="empty">No events yet.</div>';
+    } else {
+      teEl.innerHTML = d.byEvent.map(function(x){
+        var pct = (x.count / maxE) * 100;
+        return rowHTML(eventLabel(x.key), pct, x.count);
+      }).join('');
+    }
+
+    // top tabs
+    var maxT = Math.max.apply(null, d.byTab.map(function(x){ return x.count; })) || 1;
+    var ttEl = document.getElementById('top-tabs');
+    if (!d.byTab.length) {
+      ttEl.innerHTML = '<div class="empty">No tab clicks yet.</div>';
+    } else {
+      ttEl.innerHTML = d.byTab.map(function(x){
+        var pct = (x.count / maxT) * 100;
+        return rowHTML('#' + x.key, pct, x.count);
+      }).join('');
+    }
+
+    // top cities
+    var cities = d.byCity || [];
+    var maxCity = Math.max.apply(null, cities.map(function(x){ return x.count; })) || 1;
+    var citiesEl = document.getElementById('top-cities');
+    if (!cities.length) {
+      citiesEl.innerHTML = '<div class="empty">No location data yet — new events will start including city.</div>';
+    } else {
+      citiesEl.innerHTML = cities.map(function(x){
+        return rowHTML('📍 ' + x.key, (x.count/maxCity)*100, x.count);
+      }).join('');
+    }
+
+    // top devices
+    var devs = d.byDevice || [];
+    var maxDev = Math.max.apply(null, devs.map(function(x){ return x.count; })) || 1;
+    var devsEl = document.getElementById('top-devices');
+    if (!devs.length) {
+      devsEl.innerHTML = '<div class="empty">No device data yet.</div>';
+    } else {
+      devsEl.innerHTML = devs.map(function(x){
+        return rowHTML(deviceIcon(x.key) + ' ' + x.key, (x.count/maxDev)*100, x.count);
+      }).join('');
+    }
+
+    // top browsers
+    var brs = d.byBrowser || [];
+    var maxBr = Math.max.apply(null, brs.map(function(x){ return x.count; })) || 1;
+    var brEl = document.getElementById('top-browsers');
+    if (!brs.length) {
+      brEl.innerHTML = '<div class="empty">No browser data yet.</div>';
+    } else {
+      brEl.innerHTML = brs.map(function(x){
+        return rowHTML('🌐 ' + x.key, (x.count/maxBr)*100, x.count);
+      }).join('');
+    }
+
+    // trend (oldest → newest, left → right)
+    var maxD = Math.max.apply(null, d.dailyTrend.map(function(x){ return x.count; })) || 1;
+    var trEl = document.getElementById('trend');
+    trEl.innerHTML = d.dailyTrend.map(function(day){
+      var h = day.count === 0 ? 2 : Math.max(4, (day.count / maxD) * 110);
+      var dayShort = day.date.slice(5); // MM-DD
+      return '' +
+        '<div class="trend-col" title="' + day.date + ' · ' + day.count + ' events">' +
+          '<div class="trend-count">' + (day.count || '') + '</div>' +
+          '<div class="trend-bar' + (day.count === 0 ? ' zero' : '') + '" style="height:' + h + 'px"></div>' +
+          '<div class="trend-day">' + dayShort + '</div>' +
+        '</div>';
+    }).join('');
+
+    // funnel
+    var fnEl = document.getElementById('funnel');
+    var base = d.funnel.app_open || 0;
+    var steps = [
+      { key: 'app_open',          name: 'App open',      icon: '🚀' },
+      { key: 'scan_ticket',       name: 'Scan started',  icon: '📷' },
+      { key: 'scan_success',      name: 'Scan success',  icon: '✅' },
+      { key: 'dispute_generated', name: 'Dispute drawn', icon: '⚖️' }
+    ];
+    fnEl.innerHTML = steps.map(function(s){
+      var c = d.funnel[s.key] || 0;
+      var pct = base ? (c / base) * 100 : 0;
+      var pctText = base ? pct.toFixed(1) + '%' : '—';
+      return '' +
+        '<div class="funnel-step">' +
+          '<div class="funnel-name">' + s.icon + ' ' + s.name + '</div>' +
+          '<div class="funnel-track"><div class="funnel-fill" style="width:' + Math.max(0, Math.min(100, pct)) + '%">' + c + '</div></div>' +
+          '<div class="funnel-pct">' + pctText + '</div>' +
+        '</div>';
+    }).join('');
+
+    // recent feed
+    var fEl = document.getElementById('feed');
+    if (!d.recent.length) {
+      fEl.innerHTML = '<div class="empty">No events yet — start using Drivee to see live activity here.</div>';
+    } else {
+      fEl.innerHTML = d.recent.map(function(r){
+        var pills = '';
+        pills += '<span class="pill ' + (r.authed ? 'auth' : 'anon') + '">' + (r.authed ? '✓ signed-in' : '○ anon') + '</span>';
+        if (r.city)    pills += '<span class="pill">📍 ' + esc(r.city) + '</span>';
+        if (r.device)  pills += '<span class="pill">' + deviceIcon(r.device) + ' ' + esc(r.device) + '</span>';
+        if (r.browser) pills += '<span class="pill">' + esc(r.browser) + '</span>';
+        return '' +
+          '<div class="feed-row">' +
+            '<div class="feed-icon">' + eventIcon(r.event) + '</div>' +
+            '<div class="feed-text">' +
+              '<div class="feed-event">' + eventLabel(r.event) + '</div>' +
+              (r.meta ? '<div class="feed-meta">' + esc(r.meta) + '</div>' : '') +
+              '<div class="feed-context">' + pills + '</div>' +
+            '</div>' +
+            '<div class="feed-time">' + timeAgo(new Date(r.created_at)) + '</div>' +
+          '</div>';
+      }).join('');
+    }
+  }
+
+  function rowHTML(name, pct, count) {
+    return '' +
+      '<div class="bar-row">' +
+        '<div class="bar-name">' + esc(name) + '</div>' +
+        '<div class="bar-track"><div class="bar-fill" style="width:' + Math.max(2, pct) + '%"></div></div>' +
+        '<div class="bar-count">' + fmt(count) + '</div>' +
+      '</div>';
+  }
+
+  // ─── Helpers ───
+  function fmt(n) {
+    if (n == null) return '—';
+    if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+    return String(n);
+  }
+  function fmtDur(secs) {
+    if (secs == null || isNaN(secs)) return '—';
+    secs = Math.max(0, Math.round(secs));
+    if (secs < 60)   return secs + 's';
+    if (secs < 3600) return Math.floor(secs/60) + 'm ' + (secs % 60) + 's';
+    var h = Math.floor(secs/3600);
+    var m = Math.floor((secs % 3600)/60);
+    return h + 'h ' + m + 'm';
+  }
+  function deviceIcon(key) {
+    var k = String(key || '');
+    if (/iOS/.test(k))     return '';
+    if (/Android/.test(k)) return '🤖';
+    if (/macOS/.test(k))   return '🖥️';
+    if (/Windows/.test(k)) return '🖥️';
+    if (/Linux/.test(k))   return '🐧';
+    if (/Tablet/.test(k))  return '📲';
+    if (/Mobile/.test(k))  return '📱';
+    return '💻';
+  }
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function timeAgo(d) {
+    var s = Math.max(0, Math.round((Date.now() - d.getTime()) / 1000));
+    if (s < 5)    return 'just now';
+    if (s < 60)   return s + 's ago';
+    if (s < 3600) return Math.round(s / 60) + 'm ago';
+    if (s < 86400)return Math.round(s / 3600) + 'h ago';
+    return Math.round(s / 86400) + 'd ago';
+  }
+  var EVENT_LABELS = {
+    'app_open':          'App opened',
+    'tab_click':         'Tab click',
+    'scan_ticket':       'Scan started',
+    'scan_success':      'Ticket scanned',
+    'reminder_added':    'Reminder added',
+    'profile_saved':     'Profile saved',
+    'report_created':    'Community report',
+    'magic_link_sent':   'Magic link sent',
+    'gps_started':       'GPS opened',
+    'share_ticket':      'Ticket shared',
+    'dispute_generated': 'Dispute generated',
+    'true_cost_calc':    'True-cost calc',
+    'expert_contact':    'Expert contacted',
+    'user_feedback':     'User feedback'
+  };
+  var EVENT_ICONS = {
+    'app_open':          '🚀',
+    'tab_click':         '👆',
+    'scan_ticket':       '📷',
+    'scan_success':      '✅',
+    'reminder_added':    '🔔',
+    'profile_saved':     '👤',
+    'report_created':    '📍',
+    'magic_link_sent':   '✉️',
+    'gps_started':       '🛰️',
+    'share_ticket':      '📤',
+    'dispute_generated': '⚖️',
+    'true_cost_calc':    '🧮',
+    'expert_contact':    '👨‍💼',
+    'user_feedback':     '💬'
+  };
+  function eventLabel(k) { return EVENT_LABELS[k] || k; }
+  function eventIcon(k)  { return EVENT_ICONS[k]  || '•'; }
+
+  // ─── Init ───
+  // Forecast page is static. Render once; no polling, no visibility refresh.
+  // The Refresh button still works (it just re-renders the same static data).
+  loadStats();
+</script>
+
+</body>
+</html>

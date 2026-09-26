@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Contact Us | Drivee - Toronto Driver's App</title>
+<meta name="description" content="Contact Drivee - questions about tickets, vehicle history reports, mobile inspections or partnerships. A real person reads every message, usually the same day."/>
+<meta name="robots" content="index, follow"/>
+<meta property="og:type" content="website"/>
+<meta property="og:site_name" content="Drivee"/>
+<meta property="og:title" content="Contact Drivee"/>
+<meta property="og:description" content="Questions about tickets, reports or inspections? Write to us - a real person replies, usually the same day."/>
+<meta property="og:url" content="https://www.drivee.ca/contact.html"/>
+<meta property="og:locale" content="en_CA"/>
+<link rel="canonical" href="https://www.drivee.ca/contact.html"/>
+
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>🚗</text></svg>"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ContactPage",
+  "url": "https://www.drivee.ca/contact.html",
+  "name": "Contact Drivee",
+  "about": { "@type": "Organization", "name": "Drivee", "url": "https://www.drivee.ca/", "email": "drivee.canada@gmail.com" }
+}
+</script>
+
+<style>
+  :root {
+    --bg: #EEF2FB; --bg2: #E4EAF6; --paper: #FFFFFF;
+    --ink: #0B1430; --ink2: #4A5267; --ink3: #8C95A7;
+    --line: rgba(11,20,48,0.08);
+    --blue: #2D63F0; --blue-d: #1B45C2; --blue-50: #EAF0FD;
+    --green: #16A34A; --red: #E1473D;
+    --font: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); font-family: var(--font); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  a { color: inherit; }
+
+  nav.top {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 32px; background: rgba(238,242,251,0.85);
+    backdrop-filter: blur(12px); border-bottom: 1px solid var(--line);
+  }
+  nav.top .brand { font-size: 22px; font-weight: 800; letter-spacing: -1px; text-decoration: none; }
+  nav.top .brand .dot { color: var(--blue); }
+  nav.top .links { display: flex; gap: 28px; }
+  nav.top .links a { color: var(--ink2); font-size: 14px; font-weight: 500; text-decoration: none; }
+  nav.top .links a:hover, nav.top .links a.active { color: var(--ink); }
+  nav.top .cta { padding: 10px 18px; background: var(--ink-fill, var(--ink)); color: white; border-radius: 999px; font-size: 14px; font-weight: 700; text-decoration: none; }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 0 32px; }
+  .section-kicker { font-family: var(--mono); font-size: 11px; letter-spacing: 2px; font-weight: 700; color: var(--blue); }
+  .section-title { margin-top: 12px; font-size: 46px; font-weight: 800; letter-spacing: -1.8px; line-height: 1.02; }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 10px 30px rgba(11,20,48,0.05); }
+
+  .contact-grid { display: grid; grid-template-columns: 1fr 1.15fr; gap: 60px; align-items: start; padding: 72px 0 48px; }
+  .lead { margin-top: 18px; font-size: 16px; color: var(--ink2); line-height: 1.65; max-width: 460px; }
+  .quick { margin-top: 28px; display: flex; flex-direction: column; gap: 12px; }
+  .quick a.qrow, .quick .qrow {
+    display: flex; align-items: center; gap: 12px; text-decoration: none;
+    padding: 14px 18px; border-radius: 14px; background: var(--paper); border: 1px solid var(--line);
+    font-size: 14px; color: var(--ink2);
+  }
+  .quick .qrow b { color: var(--ink); }
+  .quick .ic { width: 32px; height: 32px; border-radius: 9px; background: var(--blue-50); display: grid; place-items: center; flex-shrink: 0; color: var(--blue-d); }
+
+  .contact-form { padding: 28px; display: flex; flex-direction: column; gap: 14px; }
+  .contact-form label { font-family: var(--mono); font-size: 10px; letter-spacing: 1.2px; font-weight: 700; color: var(--ink2); display: block; margin-bottom: 6px; }
+  .contact-form input, .contact-form textarea {
+    width: 100%; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--ink);
+    font-family: var(--font); font-size: 15px; padding: 12px 14px; outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .contact-form input:focus, .contact-form textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(45,99,240,0.12); }
+  .contact-form textarea { min-height: 140px; resize: vertical; }
+  .contact-send {
+    align-self: flex-start; border: none; cursor: pointer;
+    padding: 14px 28px; border-radius: 999px; background: var(--ink-fill, var(--ink)); color: #fff;
+    font-family: var(--font); font-size: 14px; font-weight: 800; transition: transform 0.15s;
+  }
+  .contact-send:hover { transform: translateY(-1px); }
+  .contact-send:disabled { opacity: 0.55; cursor: wait; transform: none; }
+  .contact-send.sent { background: var(--green); }
+  .contact-note { font-size: 12px; color: var(--ink3); line-height: 1.5; }
+  .contact-error { display: none; font-size: 13px; font-weight: 600; color: var(--red); }
+
+  footer { max-width: 1100px; margin: 0 auto; padding: 32px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; color: var(--ink3); font-family: var(--mono); font-size: 12px; }
+  footer .brand { font-family: var(--font); font-size: 20px; font-weight: 800; color: var(--ink); letter-spacing: -1px; }
+  footer .brand .dot { color: var(--blue); }
+
+  @media (max-width: 900px) {
+    nav.top .links {
+      display: flex; overflow-x: auto; max-width: 55vw;
+      -webkit-overflow-scrolling: touch; scrollbar-width: none; gap: 18px;
+    }
+    nav.top .links::-webkit-scrollbar { display: none; }
+    nav.top .links a { white-space: nowrap; font-size: 13px; }
+    .contact-grid { grid-template-columns: 1fr; gap: 28px; padding: 48px 0 32px; }
+    .section-title { font-size: 34px; }
+  }
+</style>
+<script>
+  (function(){
+    try {
+      var K='dv_sid', sid=localStorage.getItem(K);
+      if(!sid){ sid=Math.random().toString(36).slice(2)+Date.now().toString(36); localStorage.setItem(K,sid); }
+      window.dvTrack=function(event, meta){
+        try {
+          var payload = JSON.stringify({event:event,meta:meta||'',sid:sid,uid:'',auth:false});
+          // sendBeacon survives page navigation (e.g. redirect to Stripe on buy click)
+          if (navigator.sendBeacon) {
+            navigator.sendBeacon('/api/track', new Blob([payload], {type:'application/json'}));
+          } else {
+            fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:payload,keepalive:true}).catch(function(){});
+          }
+        } catch(e){}
+      };
+      dvTrack('page_view', location.pathname);
+    } catch(e){ window.dvTrack=function(){}; }
+  })();
+</script>
+  <link rel="stylesheet" href="/assets/css/theme-bridge.css">
+</head>
+<body>
+
+  <nav class="top">
+    <a href="/" class="brand">Drivee<span class="dot">.</span></a>
+    <div class="links">
+      <a href="/#features">Features</a>
+      <a href="/report.html">Report</a>
+      <a href="/mechanic.html">Mechanic</a>
+      <a href="/blog/">Blog</a>
+      <a href="/contact.html" class="active">Contact</a>
+    </div>
+    <a href="/app.html" class="cta">Open the app →</a>
+  </nav>
+
+  <main>
+    <div class="contact-grid">
+      <div>
+        <div class="section-kicker">CONTACT US</div>
+        <h1 class="section-title">Talk to us.</h1>
+        <p class="lead">
+          Question about a ticket, a vehicle history report, a mobile inspection, or a partnership?
+          Write to us - a real person reads every message, usually the same day.
+        </p>
+        <div class="quick">
+          <a class="qrow" href="mailto:drivee.canada@gmail.com">
+            <span class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></span>
+            <span><b>drivee.canada@gmail.com</b> - prefer email? Same inbox.</span>
+          </a>
+          <div class="qrow">
+            <span class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+            <span><b>Same-day replies</b> on weekdays, most weekends too.</span>
+          </div>
+          <a class="qrow" href="/mechanic.html#book">
+            <span class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span>
+            <span><b>Need an inspection fast?</b> Book a 24/7 mobile mechanic instead.</span>
+          </a>
+        </div>
+      </div>
+
+      <form class="contact-form card" id="contact-form" onsubmit="return dvContactSubmit(event)">
+        <div>
+          <label for="cf-name">YOUR NAME</label>
+          <input id="cf-name" name="name" maxlength="100" autocomplete="name" required/>
+        </div>
+        <div>
+          <label for="cf-email">EMAIL</label>
+          <input id="cf-email" name="email" type="email" maxlength="200" autocomplete="email" required/>
+        </div>
+        <div>
+          <label for="cf-msg">MESSAGE</label>
+          <textarea id="cf-msg" name="message" maxlength="4000" required></textarea>
+        </div>
+        <input name="company" id="cf-company" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;height:0;width:0;border:0;padding:0" aria-hidden="true"/>
+        <div class="contact-error" id="cf-error"></div>
+        <button class="contact-send" id="cf-send" type="submit">Send message</button>
+        <div class="contact-note">No newsletters, no spam - your email is used only to reply.</div>
+      </form>
+    </div>
+  </main>
+
+  <footer>
+    <span class="brand">Drivee<span class="dot">.</span></span>
+    <span>© 2026 DRIVEE TECHNOLOGIES INC. · TORONTO, ON</span>
+  </footer>
+
+<script>
+  function dvContactSubmit(ev) {
+    ev.preventDefault();
+    var btn = document.getElementById('cf-send');
+    var err = document.getElementById('cf-error');
+    err.style.display = 'none';
+    btn.disabled = true; btn.textContent = 'Sending…';
+    fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: document.getElementById('cf-name').value,
+        email: document.getElementById('cf-email').value,
+        message: document.getElementById('cf-msg').value,
+        company: document.getElementById('cf-company').value
+      })
+    })
+    .then(function(r){ return r.json().then(function(j){ return { ok: r.ok && j.ok, j: j }; }); })
+    .then(function(res){
+      if (res.ok) {
+        if (window.dvTrack) dvTrack('contact_sent', '');
+        btn.classList.add('sent'); btn.textContent = 'Message sent ✓';
+        document.getElementById('contact-form').reset();
+        setTimeout(function(){ btn.classList.remove('sent'); btn.textContent = 'Send message'; btn.disabled = false; }, 6000);
+      } else {
+        throw new Error(res.j && res.j.error || 'Send failed');
+      }
+    })
+    .catch(function(e){
+      err.textContent = (e.message || 'Send failed') + ' You can also email drivee.canada@gmail.com';
+      err.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Send message';
+    });
+    return false;
+  }
+</script>
+</body>
+</html>

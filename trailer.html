@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Drivee — 30s trailer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Serif:wght@500;600;700&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #FAFBFD;
+    --paper: #FFFFFF;
+    --ink: #0B1430;
+    --ink2: #4A5267;
+    --ink3: #8C95A7;
+    --line: rgba(11,20,48,0.08);
+    --blue: #2E64FF;
+    --blue-d: #1A3FB8;
+    --blue-50: #F2F6FF;
+    --green: #1FAB6B;
+    --amber: #E89B22;
+    --red: #E1473D;
+    --font: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --serif: 'IBM Plex Serif', Georgia, serif;
+  }
+  html, body { margin: 0; padding: 0; background: #000; height: 100%; overflow: hidden; font-family: var(--font); -webkit-font-smoothing: antialiased; }
+  * { box-sizing: border-box; }
+  #stageRoot { width: 100vw; height: 100vh; }
+</style>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<div id="stageRoot"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="animations.jsx"></script>
+<script type="text/babel" src="trailer-scenes.jsx"></script>
+<script type="text/babel">
+  const root = ReactDOM.createRoot(document.getElementById("stageRoot"));
+  root.render(<DriveeTrailer/>);
+</script>
+</body>
+</html>

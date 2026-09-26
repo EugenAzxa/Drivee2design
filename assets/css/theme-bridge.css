@@ -1,0 +1,153 @@
+/* ==========================================================================
+   Drivee — theme bridge
+   The content pages (VIN report, mechanic, contact, privacy, blog) were built
+   on a light paper palette but all share the same custom-property names. Rather
+   than rewrite thousands of lines of working markup, we re-point those
+   properties at the cosmic palette and patch the places that hard-coded a
+   colour instead of using a token.
+
+   Load this LAST, after the page's own <style>/<link>.
+   ========================================================================== */
+
+:root{
+  /* surfaces */
+  --bg:        #08060F;
+  --bg2:       #0C0918;
+  --paper:     #120E22;
+
+  /* ink */
+  --ink:       #F2F0FA;
+  --ink2:      #A9A3C4;
+  --ink3:      #9189AE;   /* lifted: #6D6689 fell under 4.5:1 on the void */
+
+  /* brand — blue stays, but the "dark blue" slot has to invert to stay legible */
+  /* As TEXT on the void, #2D63F0 only reaches 3.4:1 — so the token that
+     content pages use for coloured text is lightened, and the solid brand
+     blue moves to --blue-fill for backgrounds (white text still passes). */
+  --blue:      #7BA5FF;
+  --blue-fill: #2D63F0;
+  --blue-d:    #9DBAFF;
+  --blue-50:   rgba(45,99,240,.13);
+  --blue-s:    rgba(45,99,240,.22);
+
+  /* status */
+  --green:     #25C065;
+  --red:       #FF5A4E;
+  --amber:     #E89B22;
+  --mint:      rgba(37,192,101,.13);
+
+  /* rules */
+  --line:      rgba(255,255,255,.09);
+  --line-s:    rgba(255,255,255,.055);
+
+  /* fill for elements that were dark-on-light buttons/badges */
+  --ink-fill:  linear-gradient(180deg,#3E72FF,#2D63F0);
+
+  --serif: 'IBM Plex Serif', Georgia, serif;
+}
+
+html, body{ background:var(--bg); color:var(--ink); }
+
+/* ── patch hard-coded light surfaces ─────────────────────────────── */
+[style*="background:#fff"],
+[style*="background:#FFF"],
+[style*="background-color:#fff"],
+[style*="background: #fff"],
+[style*="background:white"]{
+  background:var(--paper)!important;
+}
+[style*="color:#0B1430"],
+[style*="color:#0b1430"]{ color:var(--ink)!important; }
+
+/* Cards and panels that painted themselves white directly. */
+.card, .panel, .box, .tile, .sheet, .surface,
+.report-card, .faq-item, .step-card, .price-card, .post-card{
+  background:var(--paper);
+  border-color:var(--line);
+  color:var(--ink);
+}
+
+/* ── form controls ───────────────────────────────────────────────── */
+input, select, textarea{
+  background:#0A0816;
+  color:var(--ink);
+  border-color:rgba(255,255,255,.16);
+}
+input::placeholder, textarea::placeholder{ color:var(--ink3); }
+input:focus, select:focus, textarea:focus{
+  outline:none;
+  border-color:var(--blue);
+  box-shadow:0 0 0 4px rgba(45,99,240,.18);
+}
+/* native dropdown lists render with the OS palette — force a dark one */
+select option{ background:#120E22; color:#F2F0FA; }
+
+/* ── tables ──────────────────────────────────────────────────────── */
+table{ color:var(--ink); }
+th, td{ border-color:var(--line); }
+thead th{ background:rgba(255,255,255,.04); color:var(--ink2); }
+tbody tr:nth-child(even){ background:rgba(255,255,255,.02); }
+
+/* ── shadows read as smudges on dark; deepen them ────────────────── */
+[class*="shadow"], .card, .panel{
+  box-shadow:0 18px 48px rgba(0,0,0,.45);
+}
+
+/* ── images that assumed a white page ────────────────────────────── */
+img[src$=".svg"]:not([data-keep]){ filter:none; }
+
+/* ── selection + scrollbar ───────────────────────────────────────── */
+::selection{ background:rgba(45,99,240,.4); color:#fff; }
+* { scrollbar-color:rgba(255,255,255,.2) transparent; }
+
+/* ── page chrome the originals hard-coded to the paper palette ───── */
+nav.top, .top, header .nav, .nav{
+  background:rgba(8,6,15,.86)!important;
+  backdrop-filter:blur(18px) saturate(160%);
+  -webkit-backdrop-filter:blur(18px) saturate(160%);
+  border-bottom:1px solid var(--line);
+}
+
+/* `.cta { background: var(--ink); color: white }` inverts to white-on-white
+   once --ink flips, so give it the brand gradient instead. */
+nav.top .cta, .top .cta, .nav .cta, a.cta{
+  background:linear-gradient(180deg,#3E72FF,#2D63F0)!important;
+  color:#fff!important;
+  box-shadow:0 6px 20px rgba(45,99,240,.4);
+}
+
+/* Any remaining paper-white panel. */
+[style*="rgba(238,242,251"],
+[style*="rgba(238, 242, 251"]{ background:var(--bg2)!important; }
+
+footer{ background:var(--bg2); border-top:1px solid var(--line); color:var(--ink2); }
+footer a{ color:var(--ink2); }
+footer a:hover{ color:#7BA5FF; }
+
+/* Dark-on-dark hero blocks from the light design still work, but their
+   navy gradient now sits too close to the page — lift it. */
+.cta-block{
+  background:linear-gradient(135deg, rgba(45,99,240,.20), rgba(232,155,34,.13))!important;
+  border:1px solid rgba(110,155,255,.28);
+  color:var(--ink)!important;
+}
+
+/* ── accent text that was tuned for a white page ─────────────────── */
+/* var(--blue) reads at ~3.4:1 as text on the void. Fills keep the solid
+   brand blue; text accents get the lighter tint. */
+.section-kicker, .kicker, .eyebrow, .meta, .kv, .lbl, .mi,
+.vin-try, .chip, .badge-text, .caption, small{
+  color:#B3ADCB;
+}
+.section-kicker, .kicker{ color:#8FB2FF; }
+.chip.warn{ color:#F5BB63; }
+.chip.bad,  .chip.danger{ color:#FF8C82; }
+.chip.good, .chip.ok{ color:#5FD894; }
+
+/* The white pill inside a dark CTA block inherited the (now light) ink and
+   went white-on-white. Give it the amber treatment used on the home page. */
+.cta-block a, .cta-block .btn, .cta-block button{
+  background:linear-gradient(180deg,#F2AA35,#E89B22)!important;
+  color:#231605!important;
+  box-shadow:0 8px 26px rgba(232,155,34,.34);
+}

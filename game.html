@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Drivee: Ticket Rampage - the parking-inspector brawler</title>
+<meta name="description" content="A free browser arcade game by Drivee. Play a rogue parking inspector: run around, punch and kick rival inspectors, and pelt them with tickets, coffee cups and donuts."/>
+<meta property="og:type" content="website"/>
+<meta property="og:site_name" content="Drivee"/>
+<meta property="og:title" content="Drivee: Ticket Rampage"/>
+<meta property="og:description" content="Punch, kick and throw tickets, coffee and donuts at rival parking inspectors. Free browser game."/>
+<meta property="og:url" content="https://www.drivee.ca/game.html"/>
+<link rel="canonical" href="https://www.drivee.ca/game.html"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>🚗</text></svg>"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0B1430; --ink: #eef2fb; --ink2: #9aa5c0;
+    --blue: #2D63F0; --green: #16A34A; --amber: #E89B22; --red: #E1473D;
+    --yellow: #FFD24A; --pink: #F58FC2; --coffee: #7a4a24;
+    --font: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: radial-gradient(120% 100% at 50% 0%, #14245a 0%, #0B1430 60%); color: var(--ink); font-family: var(--font); -webkit-font-smoothing: antialiased; overflow: hidden; }
+  a { color: inherit; }
+
+  .topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; }
+  .brand { font-size: 20px; font-weight: 800; letter-spacing: -1px; text-decoration: none; color: #fff; }
+  .brand .dot { color: #7AE8B0; }
+  .topbar a.back { font-family: var(--mono); font-size: 12px; color: var(--ink2); text-decoration: none; font-weight: 700; letter-spacing: 1px; }
+  .topbar a.back:hover { color: #fff; }
+
+  .wrap { height: 100%; display: grid; place-items: center; padding: 56px 12px 12px; }
+  .stage { position: relative; width: min(96vw, 960px); aspect-ratio: 960 / 600; border-radius: 16px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06); }
+  canvas { display: block; width: 100%; height: 100%; image-rendering: -webkit-optimize-contrast; }
+
+  /* overlays */
+  .screen { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 24px; background: rgba(11,20,48,0.82); backdrop-filter: blur(6px); z-index: 5; }
+  .screen.hidden { display: none; }
+  .screen h1 { font-size: clamp(28px, 5vw, 52px); font-weight: 800; letter-spacing: -2px; line-height: 1; }
+  .screen h1 em { font-style: normal; color: #7AE8B0; }
+  .screen p { margin-top: 14px; color: var(--ink2); font-size: 15px; line-height: 1.6; max-width: 520px; }
+  .keys { margin: 22px auto 0; display: grid; grid-template-columns: repeat(2, auto); gap: 8px 26px; justify-content: center; font-size: 13.5px; color: var(--ink2); }
+  .keys b { color: #fff; }
+  .kbd { display: inline-block; min-width: 22px; padding: 2px 7px; border-radius: 6px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); font-family: var(--mono); font-size: 12px; font-weight: 700; color: #fff; }
+  .btn { margin-top: 26px; display: inline-block; padding: 15px 34px; border: none; border-radius: 999px; background: #7AE8B0; color: #06331f; font-family: var(--font); font-size: 16px; font-weight: 800; cursor: pointer; }
+  .btn:hover { filter: brightness(1.05); }
+  /* Touch players get the on-screen stick, so the keyboard legend is noise. */
+  body.touch-on .keys { display: none; }
+  /* Small viewports - incl. the arcade embed on the landing page - had the
+     intro screen overflowing its stage and getting cut mid-sentence. */
+  @media (max-width: 560px) {
+    .wrap { padding: 44px 8px 8px; }
+    .screen { padding: 14px; }
+    .screen h1 { font-size: 22px; letter-spacing: -1px; }
+    .screen p { margin-top: 8px; font-size: 12px; line-height: 1.45; }
+    .keys { margin-top: 12px; gap: 6px 16px; font-size: 11px; }
+    .btn { margin-top: 14px; padding: 11px 24px; font-size: 14px; }
+  }
+  .final { margin-top: 18px; font-family: var(--mono); font-size: 15px; }
+  .final .big { font-size: 40px; font-weight: 800; color: var(--yellow); letter-spacing: -1px; }
+
+  /* leaderboard */
+  .lb { margin: 20px auto 0; max-width: 380px; text-align: left; }
+  .lb h3 { font-family: var(--mono); font-size: 12px; letter-spacing: 2px; color: var(--ink2); text-align: center; margin-bottom: 12px; }
+  .lb-row { display: grid; grid-template-columns: 28px 1fr auto auto; gap: 10px; align-items: center; padding: 7px 12px; border-radius: 8px; font-size: 14px; }
+  .lb-row:nth-child(even) { background: rgba(255,255,255,0.04); }
+  .lb-row.me { background: rgba(122,232,176,0.16); border: 1px solid rgba(122,232,176,0.4); }
+  .lb-row .rk { font-family: var(--mono); font-weight: 800; color: var(--ink2); }
+  .lb-row .rk.g { color: #FFD24A; }
+  .lb-row .nm { font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lb-row .sc { font-family: var(--mono); font-weight: 800; color: #7AE8B0; }
+  .lb-row .wv { font-family: var(--mono); font-size: 11px; color: var(--ink2); }
+  .lb-empty { text-align: center; color: var(--ink2); font-size: 13px; padding: 10px; }
+  .name-entry { margin: 18px auto 0; display: flex; gap: 8px; justify-content: center; }
+  .name-entry input { width: 180px; border: 1px solid rgba(255,255,255,0.25); border-radius: 10px; background: rgba(255,255,255,0.08); color: #fff; font-family: var(--mono); font-size: 16px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 12px 14px; outline: none; text-align: center; }
+  .name-entry input:focus { border-color: #7AE8B0; }
+  .name-entry button { border: none; border-radius: 10px; background: #7AE8B0; color: #06331f; font-weight: 800; font-size: 14px; padding: 0 20px; cursor: pointer; }
+  .name-entry.hidden { display: none; }
+
+  /* touch controls */
+  .touch { position: absolute; inset: 0; z-index: 4; pointer-events: none; display: none; }
+  .touch .stick { position: absolute; left: 18px; bottom: 18px; width: 116px; height: 116px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); pointer-events: all; }
+  .touch .stick .nub { position: absolute; left: 38px; top: 38px; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.5); }
+  .touch .btns { position: absolute; right: 14px; bottom: 18px; display: grid; grid-template-columns: repeat(3, 54px); gap: 8px; pointer-events: all; }
+  .touch .tb { width: 54px; height: 54px; border-radius: 50%; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.25); color: #fff; font-family: var(--mono); font-weight: 800; font-size: 11px; display: grid; place-items: center; user-select: none; }
+  body.touch-on .touch { display: block; }
+
+  .hint { position: fixed; bottom: 8px; left: 0; right: 0; text-align: center; font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,0.35); z-index: 3; }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="/" class="brand">Drivee<span class="dot">.</span></a>
+    <a href="/" class="back">← BACK TO SITE</a>
+  </div>
+
+  <div class="wrap">
+    <div class="stage" id="stage">
+      <canvas id="game" width="960" height="600"></canvas>
+
+      <!-- start screen -->
+      <div class="screen" id="start">
+        <div>
+          <h1>Ticket <em>Rampage</em></h1>
+          <p>You're a rogue Toronto parking inspector who's had enough. Clear the lot of rival inspectors - fists, boots, and a bottomless supply of tickets, coffee and donuts.</p>
+          <div class="keys">
+            <div><span class="kbd">W A S D</span> / arrows &nbsp; <b>Move</b></div>
+            <div><span class="kbd">Shift</span> &nbsp; <b>Run</b></div>
+            <div><span class="kbd">J</span> &nbsp; <b>Punch</b></div>
+            <div><span class="kbd">K</span> &nbsp; <b>Kick</b></div>
+            <div><span class="kbd">U</span> &nbsp; <b>Throw ticket</b></div>
+            <div><span class="kbd">I</span> &nbsp; <b>Throw coffee</b></div>
+            <div><span class="kbd">O</span> &nbsp; <b>Throw donut</b></div>
+            <div><span class="kbd">P</span> &nbsp; <b>Pause</b></div>
+          </div>
+          <button class="btn" onclick="startGame()">Start the shift</button>
+          <div class="lb" id="lb-start"><h3>TOP INSPECTORS</h3><div id="lb-start-rows"><div class="lb-empty">Loading the board...</div></div></div>
+        </div>
+      </div>
+
+      <!-- game over -->
+      <div class="screen hidden" id="over">
+        <div>
+          <h1>Shift <em>over</em>.</h1>
+          <div class="final">
+            <div>Inspectors flattened</div>
+            <div class="big" id="final-score">0</div>
+            <div id="final-wave" style="color:var(--ink2)">Reached wave 1</div>
+          </div>
+          <div class="name-entry" id="name-entry">
+            <input id="name-input" maxlength="12" placeholder="YOUR NAME" autocomplete="off" spellcheck="false"/>
+            <button onclick="submitScore()">Save score</button>
+          </div>
+          <div class="lb" id="lb-over"><h3>TOP INSPECTORS</h3><div id="lb-over-rows"></div></div>
+          <p id="over-quip"></p>
+          <button class="btn" onclick="startGame()">Clock back in</button>
+        </div>
+      </div>
+
+      <!-- touch controls -->
+      <div class="touch" id="touch">
+        <div class="stick" id="stick"><div class="nub" id="nub"></div></div>
+        <div class="btns">
+          <div class="tb" data-k="j">PUN</div>
+          <div class="tb" data-k="k">KIK</div>
+          <div class="tb" data-k="shift">RUN</div>
+          <div class="tb" data-k="u">TKT</div>
+          <div class="tb" data-k="i">COF</div>
+          <div class="tb" data-k="o">DON</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="hint">Drivee Arcade · a coffee break for Toronto drivers</div>
+
+<script>
+(function(){
+  var cv = document.getElementById('game');
+  var ctx = cv.getContext('2d');
+  var W = 960, H = 600;
+
+  // ── input ──
+  var keys = {}, pressed = {};
+  var MAP = {
+    'arrowup':'up','w':'up','arrowdown':'down','s':'down','arrowleft':'left','a':'left','arrowright':'right','d':'right',
+    'shift':'run','j':'punch','k':'kick','u':'ticket','i':'coffee','o':'donut','p':'pause'
+  };
+  window.addEventListener('keydown', function(e){
+    var k = MAP[e.key.toLowerCase()];
+    if (!k) return;
+    if (['up','down','left','right'].indexOf(k) !== -1 || k === 'punch' || k === 'kick' || k === 'ticket' || k === 'coffee' || k === 'donut' || k === 'pause') e.preventDefault();
+    if (!keys[k]) pressed[k] = true;
+    keys[k] = true;
+  });
+  window.addEventListener('keyup', function(e){ var k = MAP[e.key.toLowerCase()]; if (k) keys[k] = false; });
+
+  // touch
+  var isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+  if (isTouch) {
+    document.body.classList.add('touch-on');
+    var stick = document.getElementById('stick'), nub = document.getElementById('nub'), sid = null, scx = 0, scy = 0;
+    function setDir(dx, dy){
+      var mag = Math.hypot(dx, dy) || 1, nx = dx / mag, ny = dy / mag;
+      keys.up = ny < -0.35; keys.down = ny > 0.35; keys.left = nx < -0.35; keys.right = nx > 0.35;
+      keys.run = mag > 42;
+      nub.style.left = (38 + Math.max(-38, Math.min(38, dx))) + 'px';
+      nub.style.top = (38 + Math.max(-38, Math.min(38, dy))) + 'px';
+    }
+    stick.addEventListener('touchstart', function(e){ var r = stick.getBoundingClientRect(); scx = r.left + 58; scy = r.top + 58; sid = e.changedTouches[0].identifier; setDir(e.touches[0].clientX - scx, e.touches[0].clientY - scy); e.preventDefault(); }, {passive:false});
+    stick.addEventListener('touchmove', function(e){ for (var i=0;i<e.touches.length;i++){ setDir(e.touches[i].clientX - scx, e.touches[i].clientY - scy); } e.preventDefault(); }, {passive:false});
+    stick.addEventListener('touchend', function(e){ keys.up=keys.down=keys.left=keys.right=keys.run=false; nub.style.left='38px'; nub.style.top='38px'; }, {passive:false});
+    Array.prototype.forEach.call(document.querySelectorAll('.tb'), function(b){
+      var k = b.getAttribute('data-k');
+      b.addEventListener('touchstart', function(e){ if (!keys[k]) pressed[k]=true; keys[k]=true; e.preventDefault(); }, {passive:false});
+      b.addEventListener('touchend', function(e){ keys[k]=false; e.preventDefault(); }, {passive:false});
+    });
+  }
+
+  // ── game state ──
+  var player, enemies, projectiles, particles, pickups, floaters;
+  var score, wave, waveTimer, spawnTimer, shake, hitstop, running, paused, gameOver, killsThisWave, waveTarget, comboTimer, combo;
+
+  function reset(){
+    player = { x: W/2, y: H/2, r: 16, vx:0, vy:0, hp:100, maxhp:100,
+               fx:1, fy:0, atk:null, atkT:0, atkCd:0, throwCd:0, invuln:0, walk:0, hitFlash:0,
+               bubble:null, bubbleT:0, bubbleCol:'#7AE8B0' };
+    enemies = []; projectiles = []; particles = []; pickups = []; floaters = [];
+    score = 0; wave = 0; waveTimer = 0; spawnTimer = 0; shake = 0; hitstop = 0;
+    killsThisWave = 0; waveTarget = 0; combo = 0; comboTimer = 0;
+    nextWave();
+  }
+  function nextWave(){
+    wave++;
+    waveTarget = 3 + wave * 2;
+    killsThisWave = 0;
+    spawnTimer = 0;
+    floaters.push({ x: W/2, y: 130, txt: 'WAVE ' + wave, col: '#7AE8B0', t: 1.4, size: 42, vy: -12 });
+  }
+
+  // ── funny lines ──
+  var ENEMY_SPAWN = [
+    "That's a $150 fine!", "Your meter expired!", "No parking here, pal!",
+    "I've met my quota... almost.", "Nice bumper. Ticketed.", "Permit? PERMIT?!",
+    "You're two minutes over!", "This is a fire route!", "Book 'em!",
+    "I don't make the rules.", "Street cleaning was YESTERDAY.", "Company car, baby."
+  ];
+  var ENEMY_HURT = [
+    "Not the face!", "I'm union!", "That's assault!", "My clipboard!",
+    "I have a pension!", "Owww, my quota!", "Filing a grievance!", "Right in the badge!"
+  ];
+  var ENEMY_DIE = [
+    "Tell my sedan I love her...", "Voided...", "No appeal...", "I'll be back at 9am.",
+    "Should've been a cop.", "Ticket... withdrawn...", "Overtime for THIS?"
+  ];
+  var PLAYER_HIT = [
+    "PAID IN FULL!", "Contest THAT!", "Extra sprinkles!", "Dispute this!",
+    "Fresh donut, hot take!", "Decaf for you!", "Case dismissed!", "Refund denied!"
+  ];
+  function say(who, txt, col){
+    who.bubble = txt; who.bubbleT = 1.6; who.bubbleCol = col || '#fff';
+  }
+  function rand(a){ return a[(Math.random()*a.length)|0]; }
+
+  // ── spawning ──
+  function spawnEnemy(){
+    var side = (Math.random()*4)|0, x, y, m = 30;
+    if (side===0){ x = Math.random()*W; y = -m; }
+    else if (side===1){ x = W+m; y = Math.random()*H; }
+    else if (side===2){ x = Math.random()*W; y = H+m; }
+    else { x = -m; y = Math.random()*H; }
+    var tough = Math.random() < Math.min(0.12 + wave*0.03, 0.4);
+    var en = { x:x, y:y, r:15, vx:0, vy:0,
+      hp: tough?5:3, maxhp: tough?5:3, tough:tough,
+      spd: (0.9 + Math.random()*0.5 + wave*0.05) * (tough?0.8:1),
+      atkCd: 0, hitFlash:0, knock:0, kx:0, ky:0, walk: Math.random()*6,
+      bubble:null, bubbleT:0, bubbleCol:'#fff' };
+    enemies.push(en);
+    if (Math.random() < 0.55) say(en, rand(ENEMY_SPAWN), '#FFD24A');
+  }
+
+  // ── attacks ──
+  function doMelee(kind){
+    var reach = kind==='kick' ? 42 : 32;
+    var dmg = kind==='kick' ? 2 : 1;
+    var kb = kind==='kick' ? 9 : 5;
+    player.atk = kind; player.atkT = 0.18; player.atkCd = kind==='kick' ? 0.34 : 0.22;
+    var hx = player.x + player.fx * reach, hy = player.y + player.fy * reach;
+    var hitAny = false;
+    for (var i=0;i<enemies.length;i++){
+      var e = enemies[i];
+      if (Math.hypot(e.x-hx, e.y-hy) < e.r + 20){
+        hurtEnemy(e, dmg); e.kx = player.fx*kb; e.ky = player.fy*kb; e.knock = 1; hitAny = true;
+      }
+    }
+    if (hitAny){ shake = Math.max(shake, kind==='kick'?7:4); hitstop = Math.max(hitstop, 0.05); }
+    // swoosh particles
+    for (var p=0;p<5;p++){
+      particles.push({ x:hx, y:hy, vx:(Math.random()-0.5)*3+player.fx*2, vy:(Math.random()-0.5)*3+player.fy*2, r:2+Math.random()*2, col:'#dfe7ff', t:0.25 });
+    }
+  }
+
+  var PROJ = {
+    ticket: { spd: 9.5,  dmg:1, r:9,  col:'#FFD24A', kb:3, spin:true },
+    coffee: { spd: 7.5,  dmg:2, r:8,  col:'#7a4a24', kb:5, splash:'#c98a54' },
+    donut:  { spd: 6.2,  dmg:2, r:10, col:'#F58FC2', kb:4, bounce:true }
+  };
+  function doThrow(kind){
+    var cfg = PROJ[kind];
+    player.throwCd = 0.22;
+    player.atk = 'throw'; player.atkT = 0.14;
+    projectiles.push({ x: player.x + player.fx*18, y: player.y + player.fy*18,
+      vx: player.fx*cfg.spd, vy: player.fy*cfg.spd, kind:kind, cfg:cfg, r:cfg.r,
+      life: 1.4, rot: 0, bounced:false });
+  }
+
+  function hurtEnemy(e, dmg){
+    e.hp -= dmg; e.hitFlash = 0.12;
+    if (e.hp <= 0) killEnemy(e);
+    else if (Math.random() < 0.4) say(e, rand(ENEMY_HURT), '#fff');
+  }
+  function killEnemy(e){
+    e.dead = true;
+    floaters.push({ x:e.x, y:e.y-26, txt:'"'+rand(ENEMY_DIE)+'"', col:'#c9d2ec', t:1.1, size:13, vy:-16 });
+    combo++; comboTimer = 1.6;
+    var pts = (e.tough?25:10) * (combo>1?combo:1);
+    score += pts;
+    killsThisWave++;
+    floaters.push({ x:e.x, y:e.y-10, txt:'+'+pts, col: combo>2?'#FFD24A':'#7AE8B0', t:0.8, size: combo>2?26:20, vy:-24 });
+    // splat particles: donuts + tickets confetti
+    var cols = ['#FFD24A','#F58FC2','#7a4a24','#ffffff'];
+    for (var i=0;i<16;i++){
+      var a = Math.random()*6.28, s = 2+Math.random()*4;
+      particles.push({ x:e.x, y:e.y, vx:Math.cos(a)*s, vy:Math.sin(a)*s, r:2+Math.random()*3, col:cols[(Math.random()*cols.length)|0], t:0.6+Math.random()*0.4 });
+    }
+    shake = Math.max(shake, 5);
+    // chance to drop a coffee pickup (heal)
+    if (Math.random() < 0.14) pickups.push({ x:e.x, y:e.y, r:11, t:9, bob:0 });
+  }
+
+  function hurtPlayer(dmg){
+    if (player.invuln > 0) return;
+    player.hp -= dmg; player.invuln = 0.7; player.hitFlash = 0.2;
+    shake = Math.max(shake, 8); combo = 0;
+    for (var i=0;i<10;i++){ var a=Math.random()*6.28; particles.push({ x:player.x, y:player.y, vx:Math.cos(a)*3, vy:Math.sin(a)*3, r:2+Math.random()*2, col:'#E1473D', t:0.4 }); }
+    if (player.hp <= 0){ player.hp = 0; endGame(); }
+  }
+
+  // ── update ──
+  function update(dt){
+    if (hitstop > 0){ hitstop -= dt; if (hitstop > 0) return; }
+
+    // pause toggle
+    if (pressed.pause){ paused = !paused; }
+    if (paused) return;
+
+    // movement
+    var ix = (keys.right?1:0) - (keys.left?1:0);
+    var iy = (keys.down?1:0) - (keys.up?1:0);
+    var run = keys.run;
+    var base = run ? 4.6 : 2.7;
+    if (ix || iy){
+      var m = Math.hypot(ix, iy);
+      player.vx = ix/m * base; player.vy = iy/m * base;
+      player.fx = ix/m; player.fy = iy/m;
+      player.walk += dt * (run?18:11);
+    } else { player.vx *= 0.6; player.vy *= 0.6; }
+    player.x += player.vx; player.y += player.vy;
+    player.x = Math.max(20, Math.min(W-20, player.x));
+    player.y = Math.max(60, Math.min(H-20, player.y));
+
+    // timers
+    player.atkCd = Math.max(0, player.atkCd - dt);
+    player.throwCd = Math.max(0, player.throwCd - dt);
+    player.atkT = Math.max(0, player.atkT - dt);
+    if (player.atkT <= 0) player.atk = null;
+    player.invuln = Math.max(0, player.invuln - dt);
+    player.hitFlash = Math.max(0, player.hitFlash - dt);
+    if (player.bubbleT > 0) player.bubbleT -= dt;
+
+    // attack inputs
+    if (pressed.punch && player.atkCd<=0) doMelee('punch');
+    if (pressed.kick && player.atkCd<=0) doMelee('kick');
+    if (pressed.ticket && player.throwCd<=0) doThrow('ticket');
+    if (pressed.coffee && player.throwCd<=0) doThrow('coffee');
+    if (pressed.donut && player.throwCd<=0) doThrow('donut');
+
+    // combo timer
+    comboTimer -= dt; if (comboTimer <= 0) combo = 0;
+
+    // spawn logic
+    if (killsThisWave < waveTarget){
+      spawnTimer -= dt;
+      var maxOnScreen = 3 + wave;
+      var interval = Math.max(0.5, 1.6 - wave*0.08);
+      if (spawnTimer <= 0 && enemies.length < maxOnScreen){
+        spawnEnemy(); spawnTimer = interval;
+      }
+    } else if (enemies.length === 0){
+      nextWave();
+    }
+
+    // enemies
+    for (var i=enemies.length-1;i>=0;i--){
+      var e = enemies[i];
+      if (e.dead){ enemies.splice(i,1); continue; }
+      e.hitFlash = Math.max(0, e.hitFlash - dt);
+      e.atkCd = Math.max(0, e.atkCd - dt);
+      if (e.bubbleT > 0) e.bubbleT -= dt;
+      var dx = player.x - e.x, dy = player.y - e.y, d = Math.hypot(dx,dy) || 1;
+      if (e.knock > 0){
+        e.x += e.kx; e.y += e.ky; e.kx *= 0.82; e.ky *= 0.82; e.knock -= dt*3;
+      } else {
+        e.x += dx/d * e.spd; e.y += dy/d * e.spd; e.walk += dt*10;
+        // separation from other enemies
+        for (var j=0;j<enemies.length;j++){ if (j!==i){ var o=enemies[j]; var ox=e.x-o.x, oy=e.y-o.y, od=Math.hypot(ox,oy); if (od>0 && od<e.r+o.r){ e.x += ox/od*0.8; e.y += oy/od*0.8; } } }
+      }
+      e.x = Math.max(10, Math.min(W-10, e.x)); e.y = Math.max(50, Math.min(H-10, e.y));
+      // enemy attack
+      if (d < e.r + player.r + 6 && e.atkCd <= 0){
+        hurtPlayer(e.tough?12:8); e.atkCd = 1.1;
+        e.kx = -dx/d*4; e.ky = -dy/d*4; e.knock = 0.6;
+      }
+    }
+
+    // projectiles
+    for (var p=projectiles.length-1;p>=0;p--){
+      var pr = projectiles[p];
+      pr.x += pr.vx; pr.y += pr.vy; pr.life -= dt; pr.rot += 0.4;
+      // wall bounce for donut
+      if (pr.cfg.bounce && !pr.bounced){
+        if (pr.x<pr.r||pr.x>W-pr.r){ pr.vx*=-0.8; pr.bounced=true; } if (pr.y<50+pr.r||pr.y>H-pr.r){ pr.vy*=-0.8; pr.bounced=true; }
+      }
+      var hit = false;
+      for (var q=0;q<enemies.length;q++){
+        var en = enemies[q];
+        if (Math.hypot(en.x-pr.x, en.y-pr.y) < en.r + pr.r){
+          hurtEnemy(en, pr.cfg.dmg);
+          var m2 = Math.hypot(pr.vx,pr.vy)||1; en.kx = pr.vx/m2*pr.cfg.kb; en.ky = pr.vy/m2*pr.cfg.kb; en.knock = 0.8;
+          hit = true;
+          // splash
+          var sc = pr.cfg.splash || pr.cfg.col;
+          for (var s=0;s<8;s++){ var a=Math.random()*6.28,sp=1+Math.random()*3; particles.push({ x:pr.x, y:pr.y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, r:2+Math.random()*2, col:sc, t:0.4 }); }
+          floaters.push({ x:pr.x, y:pr.y-8, txt: pr.kind.toUpperCase()+'!', col: pr.cfg.col, t:0.5, size:14, vy:-18 });
+          if (Math.random() < 0.4) say(player, rand(PLAYER_HIT), '#7AE8B0');
+          break;
+        }
+      }
+      if (hit || pr.life<=0 || pr.x<-20||pr.x>W+20||pr.y<-20||pr.y>H+20) projectiles.splice(p,1);
+    }
+
+    // pickups (coffee heal)
+    for (var k=pickups.length-1;k>=0;k--){
+      var pk = pickups[k]; pk.t -= dt; pk.bob += dt*4;
+      if (Math.hypot(player.x-pk.x, player.y-pk.y) < player.r + pk.r){
+        player.hp = Math.min(player.maxhp, player.hp + 20);
+        floaters.push({ x:pk.x, y:pk.y-10, txt:'+20 HP', col:'#7AE8B0', t:0.9, size:18, vy:-22 });
+        pickups.splice(k,1); continue;
+      }
+      if (pk.t<=0) pickups.splice(k,1);
+    }
+
+    // particles + floaters
+    for (var a=particles.length-1;a>=0;a--){ var pa=particles[a]; pa.x+=pa.vx; pa.y+=pa.vy; pa.vx*=0.94; pa.vy*=0.94; pa.t-=dt; if (pa.t<=0) particles.splice(a,1); }
+    for (var f=floaters.length-1;f>=0;f--){ var fl=floaters[f]; fl.y += (fl.vy||-20)*dt; fl.t-=dt; if (fl.t<=0) floaters.splice(f,1); }
+
+    if (shake>0) shake = Math.max(0, shake - dt*30);
+  }
+
+  // ── draw ──
+  // ── isometric 3D-map projection (tilted ground plane) ──
+  var HORIZON = 128;
+  function proj(wx, wy){
+    var d = wy / H;                       // 0 far .. 1 near
+    var s = 0.5 + d * 0.75;               // depth scale
+    var spread = 0.46 + d * 0.62;         // x spreads toward the viewer
+    return { sx: W/2 + (wx - W/2) * spread, sy: HORIZON + (H - 26 - HORIZON) * d, s: s };
+  }
+  // enforcement heat-zone colour (red-hot downtown -> green/blue edges)
+  var HEAT = [[0.0,[203,50,44]],[0.22,[231,120,34]],[0.46,[228,176,58]],[0.72,[52,132,84]],[1.0,[43,74,138]]];
+  function heat(t){
+    t = Math.max(0, Math.min(1, t));
+    for (var i=1;i<HEAT.length;i++){ if (t<=HEAT[i][0]){ var lo=HEAT[i-1], hi=HEAT[i], f=(t-lo[0])/(hi[0]-lo[0]);
+      return 'rgb('+Math.round(lo[1][0]+(hi[1][0]-lo[1][0])*f)+','+Math.round(lo[1][1]+(hi[1][1]-lo[1][1])*f)+','+Math.round(lo[1][2]+(hi[1][2]-lo[1][2])*f)+')'; } }
+    return 'rgb(43,74,138)';
+  }
+  // precompute ground quads once (projection is static)
+  var GROUND = [], GW = 16, GH = 11, HOTX = W*0.44, HOTY = H*0.70;
+  (function(){
+    for (var gy=0; gy<GH; gy++){ for (var gx=0; gx<GW; gx++){
+      var x0=gx/GW*W, x1=(gx+1)/GW*W, y0=gy/GH*H, y1=(gy+1)/GH*H;
+      var cx=(x0+x1)/2, cy=(y0+y1)/2;
+      var dist = Math.hypot(cx-HOTX, cy-HOTY) / (W*0.52);
+      GROUND.push({ a:proj(x0,y0), b:proj(x1,y0), c:proj(x1,y1), d:proj(x0,y1), col: heat(dist) });
+    }}
+  })();
+  var LABELS = [
+    { wx:W*0.30, wy:H*0.42, t:'YORKVILLE' }, { wx:W*0.62, wy:H*0.40, t:'YONGE EAST' },
+    { wx:W*0.40, wy:H*0.66, t:'KENSINGTON' }, { wx:W*0.66, wy:H*0.72, t:'HARBOURFRONT' },
+    { wx:W*0.22, wy:H*0.78, t:'PARKDALE' }
+  ];
+
+  function drawInspector(wx, wy, r, opt){
+    var pj = proj(wx, wy), s = pj.s;
+    var walk = opt.walk||0, bob = Math.sin(walk)*2;
+    var uni = opt.uni, cap = opt.cap, flash = opt.flash;
+    var fx = opt.fx||1, fy = opt.fy||0;
+    ctx.save(); ctx.translate(pj.sx, pj.sy);
+    // ground shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.38)'; ctx.beginPath(); ctx.ellipse(0, 0, r*0.95*s, r*0.42*s, 0, 0, 6.28); ctx.fill();
+    ctx.scale(s, s); ctx.translate(0, -r*1.25 + bob);   // stand the figure up on the plane
+    // limbs
+    ctx.strokeStyle = uni; ctx.lineWidth = 6; ctx.lineCap='round';
+    var swing = Math.sin(walk)*4;
+    ctx.beginPath(); ctx.moveTo(-5,r-4); ctx.lineTo(-6, r+8+swing); ctx.moveTo(5,r-4); ctx.lineTo(6, r+8-swing); ctx.stroke();
+    var ext = 0;
+    if (opt.atk==='punch') ext = 18*opt.atkP;
+    if (opt.atk==='kick') ext = 24*opt.atkP;
+    if (opt.atk==='throw') ext = 14*opt.atkP;
+    ctx.beginPath();
+    ctx.moveTo(-r*0.6, 0); ctx.lineTo(-r*0.6 + fx*ext*0.4, fy*ext*0.4 - 2);
+    ctx.moveTo(r*0.6, 0); ctx.lineTo(r*0.6 + fx*ext, fy*ext);
+    ctx.stroke();
+    // body
+    ctx.fillStyle = flash ? '#fff' : uni;
+    ctx.beginPath(); ctx.roundRect(-r*0.8, -r*0.6, r*1.6, r*1.5, 7); ctx.fill();
+    ctx.fillStyle = '#FFD24A'; ctx.beginPath(); ctx.arc(-r*0.35, 0, 3, 0, 6.28); ctx.fill();
+    // head + cap
+    ctx.fillStyle = '#FFE4C9'; ctx.beginPath(); ctx.arc(0, -r*0.7, r*0.62, 0, 6.28); ctx.fill();
+    ctx.fillStyle = cap; ctx.beginPath(); ctx.arc(0, -r*0.9, r*0.66, Math.PI, 0); ctx.fill();
+    ctx.fillRect(-r*0.7, -r*0.95, r*1.4, 4);
+    ctx.fillStyle = '#0E1B3D';
+    ctx.beginPath(); ctx.arc(fx*4-3, -r*0.7+fy*2, 2, 0,6.28); ctx.arc(fx*4+3, -r*0.7+fy*2, 2, 0,6.28); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBubble(wx, wy, txt, col){
+    var pj = proj(wx, wy), x = pj.sx, y = pj.sy - 34*pj.s;
+    ctx.font = '700 13px ' + "'Plus Jakarta Sans', sans-serif";
+    var w = ctx.measureText(txt).width + 18, h = 23, bx = x - w/2, by = y - h - 6;
+    bx = Math.max(4, Math.min(W - w - 4, bx));
+    ctx.fillStyle = 'rgba(11,20,48,0.92)';
+    ctx.beginPath(); ctx.roundRect(bx, by, w, h, 8); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x-5, by+h); ctx.lineTo(x+5, by+h); ctx.lineTo(x, by+h+7); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = col; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(txt, bx + w/2, by + h/2 + 1);
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  function drawProjectile(pr){
+    var pj = proj(pr.x, pr.y), s = pj.s;
+    ctx.save(); ctx.translate(pj.sx, pj.sy - 14*s); ctx.scale(s, s); ctx.rotate(pr.rot);
+    if (pr.kind==='ticket'){ ctx.fillStyle='#FFD24A'; ctx.fillRect(-7,-9,14,18); ctx.strokeStyle='#c99a1e'; ctx.lineWidth=1; ctx.strokeRect(-7,-9,14,18); ctx.fillStyle='#c99a1e'; ctx.fillRect(-5,-6,10,1.5); ctx.fillRect(-5,-2,10,1.5); ctx.fillRect(-5,2,7,1.5); }
+    else if (pr.kind==='coffee'){ ctx.fillStyle='#fff'; ctx.beginPath(); ctx.roundRect(-7,-9,14,18,3); ctx.fill(); ctx.fillStyle='#7a4a24'; ctx.fillRect(-7,-9,14,4); ctx.fillStyle='#3a2412'; ctx.beginPath(); ctx.arc(0,-2,3,0,6.28); ctx.fill(); }
+    else { ctx.fillStyle='#F58FC2'; ctx.beginPath(); ctx.arc(0,0,10,0,6.28); ctx.fill(); ctx.fillStyle='#2b3350'; ctx.beginPath(); ctx.arc(0,0,4,0,6.28); ctx.fill(); ctx.fillStyle='#fff'; for (var s2=0;s2<5;s2++){ var a=s2*1.25; ctx.fillRect(Math.cos(a)*7-1, Math.sin(a)*7-1, 2, 2); } }
+    ctx.restore();
+  }
+
+  function drawPickup(pk){
+    var pj = proj(pk.x, pk.y), s = pj.s, by=Math.sin(pk.bob)*3;
+    ctx.save(); ctx.translate(pj.sx, pj.sy);
+    ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(0,0,10*s,4*s,0,0,6.28); ctx.fill();
+    ctx.scale(s,s); ctx.translate(0, -12 + by);
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.roundRect(-8,-10,16,20,3); ctx.fill();
+    ctx.fillStyle = '#7a4a24'; ctx.fillRect(-8,-10,16,4);
+    ctx.fillStyle = '#7AE8B0'; ctx.font='700 9px '+"'JetBrains Mono',monospace"; ctx.textAlign='center'; ctx.fillText('+HP', 0, 4);
+    ctx.restore();
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.save();
+    if (shake>0){ ctx.translate((Math.random()-0.5)*shake, (Math.random()-0.5)*shake); }
+
+    // dark sky + downtown glow (map vibe)
+    ctx.fillStyle = '#060a18'; ctx.fillRect(0,0,W,H);
+    var glow = ctx.createRadialGradient(W*0.44, HORIZON+30, 20, W*0.44, HORIZON+30, 320);
+    glow.addColorStop(0, 'rgba(45,99,240,0.35)'); glow.addColorStop(1, 'rgba(45,99,240,0)');
+    ctx.fillStyle = glow; ctx.fillRect(0,0,W,H);
+
+    // ── ground heat zones ──
+    for (var g=0; g<GROUND.length; g++){
+      var q = GROUND[g];
+      ctx.fillStyle = q.col;
+      ctx.beginPath(); ctx.moveTo(q.a.sx,q.a.sy); ctx.lineTo(q.b.sx,q.b.sy); ctx.lineTo(q.c.sx,q.c.sy); ctx.lineTo(q.d.sx,q.d.sy); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.18)'; ctx.lineWidth = 1; ctx.stroke();
+    }
+    // neighbourhood labels
+    ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.font = '700 11px '+"'JetBrains Mono',monospace"; ctx.textAlign='center';
+    for (var L=0; L<LABELS.length; L++){ var lp = proj(LABELS[L].wx, LABELS[L].wy); ctx.fillText(LABELS[L].t, lp.sx, lp.sy); }
+
+    // ── depth-sorted actors (far first) ──
+    var actors = [];
+    for (var i=0;i<pickups.length;i++) actors.push({ wy:pickups[i].y, k:'pk', o:pickups[i] });
+    for (var e2=0;e2<enemies.length;e2++) actors.push({ wy:enemies[e2].y, k:'en', o:enemies[e2] });
+    for (var p2=0;p2<projectiles.length;p2++) actors.push({ wy:projectiles[p2].y, k:'pr', o:projectiles[p2] });
+    actors.push({ wy:player.y, k:'pl', o:player });
+    actors.sort(function(A,B){ return A.wy - B.wy; });
+
+    var fmag = Math.hypot(player.fx,player.fy)||1;
+    for (var z=0; z<actors.length; z++){
+      var ac = actors[z];
+      if (ac.k==='pk') drawPickup(ac.o);
+      else if (ac.k==='pr') drawProjectile(ac.o);
+      else if (ac.k==='en'){
+        var en = ac.o;
+        drawInspector(en.x, en.y, en.r, { uni: en.tough?'#7a1f18':'#C0392B', cap:'#4a1410', walk:en.walk, fx:(player.x-en.x), fy:(player.y-en.y), flash: en.hitFlash>0 });
+        if (en.hp < en.maxhp){ var hp=proj(en.x,en.y); ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(hp.sx-14, hp.sy-en.r*2.4*hp.s, 28, 4); ctx.fillStyle='#E1473D'; ctx.fillRect(hp.sx-14, hp.sy-en.r*2.4*hp.s, 28*(en.hp/en.maxhp), 4); }
+        if (en.bubbleT > 0) drawBubble(en.x, en.y, en.bubble, en.bubbleCol);
+      } else {
+        drawInspector(player.x, player.y, player.r, {
+          uni: player.hitFlash>0 ? '#fff' : '#2D63F0', cap:'#0E1B3D', walk:player.walk,
+          fx: player.fx/fmag, fy: player.fy/fmag, flash: player.invuln>0 && (Math.floor(player.invuln*20)%2===0),
+          atk: player.atk, atkP: player.atk ? (1 - player.atkT/0.18) : 0 });
+        if (player.bubbleT > 0) drawBubble(player.x, player.y, player.bubble, player.bubbleCol);
+      }
+    }
+
+    // particles (projected)
+    for (var a=0;a<particles.length;a++){ var pa=particles[a], pj=proj(pa.x,pa.y); ctx.globalAlpha=Math.max(0,pa.t*2); ctx.fillStyle=pa.col; ctx.beginPath(); ctx.arc(pj.sx,pj.sy-10*pj.s,pa.r*pj.s,0,6.28); ctx.fill(); }
+    ctx.globalAlpha=1;
+
+    // floaters (projected)
+    for (var f=0;f<floaters.length;f++){ var fl=floaters[f], fp=proj(fl.x,fl.y); ctx.globalAlpha=Math.max(0,Math.min(1,fl.t*1.5)); ctx.fillStyle=fl.col; ctx.font='800 '+(fl.size||18)+'px '+"'Plus Jakarta Sans',sans-serif"; ctx.textAlign='center'; ctx.fillText(fl.txt, fp.sx, fp.sy-20*fp.s); }
+    ctx.globalAlpha=1;
+
+    ctx.restore();
+
+    // ── HUD ──
+    // health bar
+    ctx.fillStyle='rgba(0,0,0,0.4)'; ctx.fillRect(16,16,240,20);
+    ctx.fillStyle= player.hp>40?'#16A34A':'#E1473D'; ctx.fillRect(18,18,236*(player.hp/player.maxhp),16);
+    ctx.fillStyle='#fff'; ctx.font='800 11px '+"'JetBrains Mono',monospace"; ctx.textAlign='left'; ctx.fillText('HEALTH', 24, 30);
+    // score + wave
+    ctx.textAlign='right'; ctx.fillStyle='#fff'; ctx.font='800 26px '+"'Plus Jakarta Sans',sans-serif"; ctx.fillText(score.toLocaleString(), W-16, 34);
+    ctx.fillStyle='#9aa5c0'; ctx.font='700 12px '+"'JetBrains Mono',monospace"; ctx.fillText('WAVE '+wave+'  ·  '+killsThisWave+'/'+waveTarget, W-16, 52);
+    // combo
+    if (combo>1){ ctx.textAlign='center'; ctx.fillStyle='#FFD24A'; ctx.font='800 22px '+"'Plus Jakarta Sans',sans-serif"; ctx.fillText(combo+'x COMBO', W/2, 40); }
+
+    if (paused){ ctx.fillStyle='rgba(11,20,48,0.6)'; ctx.fillRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.font='800 40px '+"'Plus Jakarta Sans',sans-serif"; ctx.fillText('PAUSED', W/2, H/2); ctx.font='600 15px '+"'Plus Jakarta Sans',sans-serif"; ctx.fillStyle='#9aa5c0'; ctx.fillText('press P to resume', W/2, H/2+30); }
+  }
+
+  // ── loop ──
+  var last = 0;
+  function frame(t){
+    if (!last) last = t;
+    var dt = Math.min(0.05, (t - last)/1000); last = t;
+    if (running && !gameOver){ update(dt); draw(); }
+    pressed = {};
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  // ── screens ──
+  var QUIPS = [
+    'The lot is quiet again. Too quiet.',
+    'HR has questions. You have donuts.',
+    'Somewhere, a meter is still running.',
+    'You fought the law and the donuts won.',
+    'Overtime approved. Retroactively.'
+  ];
+  window.startGame = function(){
+    document.getElementById('start').classList.add('hidden');
+    document.getElementById('over').classList.add('hidden');
+    reset(); running = true; paused = false; gameOver = false; last = 0;
+    if (window.dvTrack) window.dvTrack('page_view', '/game.html#play');
+  };
+  function endGame(){
+    gameOver = true; running = false;
+    document.getElementById('final-score').textContent = score.toLocaleString();
+    document.getElementById('final-wave').textContent = 'Reached wave ' + wave;
+    document.getElementById('over-quip').textContent = QUIPS[(Math.random()*QUIPS.length)|0];
+    document.getElementById('over').classList.remove('hidden');
+    // reset name-entry state and pre-fill remembered name
+    var ne = document.getElementById('name-entry');
+    ne.classList.remove('hidden');
+    var saved = '';
+    try { saved = localStorage.getItem('dv_game_name') || ''; } catch(e){}
+    document.getElementById('name-input').value = saved;
+    window._pendingScore = { score: score, wave: wave };
+    loadLeaderboard('lb-over-rows', null);
+  }
+
+  // ── leaderboard ──
+  function esc(s){ var d=document.createElement('div'); d.textContent=s==null?'':String(s); return d.innerHTML; }
+  function renderBoard(elId, scores, meName){
+    var el = document.getElementById(elId);
+    if (!scores || !scores.length){ el.innerHTML = '<div class="lb-empty">No scores yet. Be the first!</div>'; return; }
+    el.innerHTML = scores.map(function(s, i){
+      var mine = meName && s.name.toUpperCase() === meName.toUpperCase();
+      return '<div class="lb-row' + (mine?' me':'') + '">' +
+        '<span class="rk' + (i<3?' g':'') + '">' + (i+1) + '</span>' +
+        '<span class="nm">' + esc(s.name) + '</span>' +
+        '<span class="sc">' + s.score.toLocaleString() + '</span>' +
+        '<span class="wv">W' + s.wave + '</span>' +
+      '</div>';
+    }).join('');
+  }
+  function loadLeaderboard(elId, meName){
+    fetch('/api/leaderboard').then(function(r){ return r.json(); })
+      .then(function(d){ renderBoard(elId, d.scores || [], meName); })
+      .catch(function(){ document.getElementById(elId).innerHTML = '<div class="lb-empty">Board unavailable right now.</div>'; });
+  }
+  window.submitScore = function(){
+    var name = (document.getElementById('name-input').value || '').replace(/[^\w \-]/g,'').trim().slice(0,12) || 'ANON';
+    try { localStorage.setItem('dv_game_name', name); } catch(e){}
+    var ps = window._pendingScore || { score: 0, wave: 1 };
+    document.getElementById('name-entry').classList.add('hidden');
+    // submit via track endpoint (meta = "name|score|wave")
+    try {
+      fetch('/api/track', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ event:'game_score', meta: name + '|' + ps.score + '|' + ps.wave, sid:'', uid:'', auth:false }) })
+      .then(function(){ setTimeout(function(){ loadLeaderboard('lb-over-rows', name); }, 700); });
+    } catch(e){}
+  };
+
+  // lightweight page tracker (shares the site's endpoint)
+  try {
+    var K='dv_sid', sid=localStorage.getItem(K);
+    if(!sid){ sid=Math.random().toString(36).slice(2)+Date.now().toString(36); localStorage.setItem(K,sid); }
+    window.dvTrack=function(ev,meta){ try{ var b=JSON.stringify({event:ev,meta:meta||'',sid:sid,uid:'',auth:false}); if(navigator.sendBeacon) navigator.sendBeacon('/api/track', new Blob([b],{type:'application/json'})); }catch(e){} };
+    window.dvTrack('page_view','/game.html');
+  } catch(e){}
+
+  // load the start-screen leaderboard
+  loadLeaderboard('lb-start-rows', null);
+})();
+</script>
+</body>
+</html>

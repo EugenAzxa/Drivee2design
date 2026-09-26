@@ -1,0 +1,13 @@
+{
+  "name": "drivee",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Drivee — Toronto parking & fines manager. Serverless functions for tracking, analytics, and notifications.",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "resend": "^4.0.0",
+    "web-push": "^3.6.7"
+  }
+}

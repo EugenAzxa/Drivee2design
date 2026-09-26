@@ -1,0 +1,62 @@
+# Drivee - robots.txt
+# Allow all crawlers full access to the public site.
+# The analytics dashboards are gated by app-side auth, not robots rules.
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /analytics.html
+Disallow: /analytics-forecast.html
+
+# ── AI / LLM crawlers - explicitly welcome ──
+# Search-time fetchers (power AI answers that cite sources)
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+# Training corpora crawlers
+User-agent: GPTBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+# LLM-readable site summary
+# https://www.drivee.ca/llms.txt
+
+Sitemap: https://www.drivee.ca/sitemap.xml
