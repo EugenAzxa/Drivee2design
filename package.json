@@ -8,6 +8,11 @@
   },
   "dependencies": {
     "resend": "^4.0.0",
-    "web-push": "^3.6.7"
+    "web-push": "^3.6.7",
+    "@anthropic-ai/sdk": "^0.70.0"
+  },
+  "scripts": {
+    "dev": "node _dev-server.js",
+    "test:tickets": "node tools/test-tickets.js"
   }
 }

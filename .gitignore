@@ -4,3 +4,7 @@ node_modules/
 .env
 .env.local
 APP Design/
+tools/tickets/*
+!tools/tickets/README.md
+.env.local
+.env

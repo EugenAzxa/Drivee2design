@@ -442,3 +442,80 @@
   .hero-proof{ gap:18px; }
   .dz-actions .btn{ width:100%; }
 }
+
+/* ── scan confidence banner ──────────────────────────────────────── */
+.conf-warn{
+  display:block; margin-bottom:18px; padding:12px 15px;
+  border-radius:var(--r-sm); font-size:13.5px; line-height:1.6;
+  background:var(--amber-dim); border:1px solid rgba(232,155,34,.4); color:#F5D9A8;
+}
+.conf-warn strong{ color:#F5BB63; }
+.conf-warn.conf-low{
+  background:rgba(255,90,78,.12); border-color:rgba(255,90,78,.42); color:#FFC9C4;
+}
+.conf-warn.conf-low strong{ color:#FF8C82; }
+
+/* provenance tags — exact figures vs estimates must never look alike */
+.tag-exact, .tag-est{
+  display:inline-block; margin-left:7px; padding:2px 7px; border-radius:100px;
+  font-family:var(--mono); font-size:9.5px; font-weight:700;
+  letter-spacing:.1em; text-transform:uppercase; vertical-align:middle;
+}
+.tag-exact{ background:rgba(37,192,101,.16); color:#5FD894; border:1px solid rgba(37,192,101,.35); }
+.tag-est{ background:rgba(255,255,255,.07); color:var(--ink-3); border:1px solid var(--line); }
+
+.src-note{ font-size:11.5px; color:var(--ink-3); margin-top:10px; line-height:1.55; }
+.offence-note{
+  margin-top:16px; padding:13px 16px; border-left:2px solid var(--blue);
+  background:var(--blue-dim); border-radius:0 var(--r-sm) var(--r-sm) 0;
+  font-size:13.5px; color:var(--ink-2); line-height:1.6;
+}
+.verdict-why{ margin-top:10px; font-size:14px; color:var(--ink-3); line-height:1.6; }
+.regime-note{ font-size:14px; color:var(--ink-2); line-height:1.65; }
+.regime-dead{ margin-top:10px; font-size:13.5px; color:#F5BB63; font-weight:600; }
+
+/* ── what it actually costs ──────────────────────────────────────── */
+.cost-block{ margin-top:28px; }
+.cost-rows{ border:1px solid var(--line); border-radius:var(--r); overflow:hidden; }
+.cost-row{
+  display:flex; align-items:center; justify-content:space-between; gap:14px;
+  padding:12px 16px; border-bottom:1px solid var(--line);
+  background:var(--void-2); font-size:14px;
+}
+.cost-row:last-child{ border-bottom:0; }
+.cost-l{ color:var(--ink-2); }
+.cost-v{ font-weight:800; font-size:15px; white-space:nowrap; }
+.cost-row.cost-total{ background:rgba(255,90,78,.09); }
+.cost-row.cost-total .cost-v{ color:#FF8C82; }
+.cost-row.cost-rep{ background:rgba(37,192,101,.08); }
+.cost-row.cost-rep .cost-v{ color:#5FD894; }
+
+.cost-callout{
+  margin-top:14px; padding:13px 16px; border-radius:var(--r-sm);
+  font-size:14px; line-height:1.6; color:var(--ink-2);
+  background:var(--panel); border:1px solid var(--line);
+}
+.cost-callout.pays{
+  background:rgba(37,192,101,.11); border-color:rgba(37,192,101,.36); color:#B6EFD0;
+}
+
+/* ── firm list additions ─────────────────────────────────────────── */
+.firms-intro{ font-size:14px; color:var(--ink-2); margin-top:12px; line-height:1.6; }
+.price-hint{
+  margin-top:16px; padding:12px 15px; border-radius:var(--r-sm);
+  background:var(--panel); border:1px solid var(--line);
+  font-size:13.5px; color:var(--ink-2); line-height:1.6;
+}
+.price-hint strong{ color:var(--ink); }
+.firm-perk.firm-licence{
+  background:var(--blue-dim); border-color:rgba(110,155,255,.32); color:#BFD3FF;
+}
+.firm-quote cite{
+  display:block; margin-top:8px; font-style:normal;
+  font-size:11.5px; color:var(--ink-3); letter-spacing:.02em;
+}
+
+@media (max-width:620px){
+  .cost-row{ font-size:13px; padding:11px 13px; }
+  .cost-v{ font-size:14px; }
+}

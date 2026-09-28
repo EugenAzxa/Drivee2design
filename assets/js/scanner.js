@@ -1,61 +1,64 @@
 /* ==========================================================================
-   Drivee — ticket scanner + lawyer funnel
-   The whole point of the landing page: a driver arrives from a Google
-   search, drops their ticket in, and gets a verdict plus a defence firm
-   without ever leaving the page.
+   Drivee — ticket scanner + Ontario lawyer funnel
+   A driver arrives from a search, drops in a ticket photo, and gets:
 
-     drop/paste/photo → shrink → /api/claude (vision) → parse
-       → ticket details + verdict + deadline cost
-       → matched firms → firm detail → free case review → /api/lead
+     drop/paste/photo → /api/scan-ticket (server-owned prompt + JSON schema)
+       → what the ticket is, in Ontario terms (screening review vs POA court)
+       → what it really costs: fine + demerit points + insurance estimate
+       → what representation costs for THIS charge
+       → firms that can actually take it, cheapest first
+       → free case review → /api/lead
 
-   Vision prompt and parser are carried over from the old app so the
-   extraction behaves exactly as it does in production.
+   Every figure is labelled exact or estimated. Nothing here promises an
+   outcome, and a Criminal Code charge is never matched to a paralegal.
    ========================================================================== */
 (function () {
   'use strict';
 
-  var $  = function (s, r) { return (r || document).querySelector(s); };
+  var $ = function (s, r) { return (r || document).querySelector(s); };
   var esc = function (s) {
     return String(s == null ? '' : s)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   };
+  var money = function (n) {
+    return '$' + Number(n || 0).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+  var money0 = function (n) {
+    return '$' + Math.round(Number(n || 0)).toLocaleString('en-CA');
+  };
 
-  var zone   = $('#dropzone');
-  var input  = $('#ticket-file');
-  var stage  = $('#scan-stage');
+  var zone  = $('#dropzone');
+  var input = $('#ticket-file');
+  var stage = $('#scan-stage');
   if (!zone || !input || !stage) return;
+
+  var ON = window.ONTARIO;
 
   var intake = zone.closest('.intake');
   var dzTitle = $('.dz-title', zone);
   var dzTitleFull = dzTitle ? dzTitle.textContent : '';
 
-  var state = { parsed: null, firm: null, busy: false };
+  var state = { ticket: null, firms: [], cost: null, busy: false };
 
-  /* Collapse the big dropzone once an answer is on screen, restore it when
-     the user comes back to scan another. */
   function setCompact(on) {
     if (!intake) return;
     intake.classList.toggle('has-result', !!on);
     if (dzTitle) dzTitle.textContent = on ? 'Scan another ticket' : dzTitleFull;
-    zone.setAttribute('aria-label', on
-      ? 'Scan another ticket'
-      : 'Upload a photo of your ticket to scan it');
+    zone.setAttribute('aria-label', on ? 'Scan another ticket' : 'Upload a photo of your ticket to scan it');
   }
 
-  /* ── analytics (same endpoint the old site used) ──────────────── */
   function track(event, detail) {
     try {
       fetch('/api/track', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ event: event, detail: detail || '', path: location.pathname }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event: event, meta: detail || '', path: location.pathname }),
         keepalive: true
       }).catch(function () {});
     } catch (e) {}
   }
 
-  /* ── image shrink — keeps us under Vercel's body limit (HTTP 413) ── */
+  /* ── image shrink, keeps us under the request body limit ───────── */
   function shrink(file, maxPx, quality, done) {
     try {
       var url = URL.createObjectURL(file);
@@ -65,7 +68,7 @@
           var w = img.naturalWidth, h = img.naturalHeight;
           var scale = Math.min(1, maxPx / Math.max(w, h));
           var c = document.createElement('canvas');
-          c.width  = Math.round(w * scale);
+          c.width = Math.round(w * scale);
           c.height = Math.round(h * scale);
           c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
           URL.revokeObjectURL(url);
@@ -77,111 +80,7 @@
     } catch (e) { done(null); }
   }
 
-  var VISION_PROMPT =
-    'You are scanning a document that may be any Canadian vehicle-related fine, ticket, or bill. ' +
-    'This includes: parking tickets, speeding tickets, red light camera fines, stop sign fines, stunt driving charges, ' +
-    'careless driving charges, DUI/impaired driving charges, toll bills (407 ETR, 412, 418), HOV lane violations, ' +
-    'distracted driving fines, seatbelt fines, insurance fines, registration fines, camera enforcement notices, ' +
-    'or any other traffic or parking violation from any Canadian province or territory ' +
-    '(ON, BC, QC, AB, MB, SK, NS, NB, PE, NL, YT, NT, NU).\n\n' +
-    'Extract all available details and reply in this EXACT format (no extra text):\n' +
-    'AMOUNT: [total amount owing, number only, no $ sign]\n' +
-    'REF: [ticket number, infraction number, reference number, or account number]\n' +
-    'PLATE: [vehicle license plate number, or unknown]\n' +
-    'TYPE: [one of: parking, speeding, redlight, stopsign, toll, hov, distracted, seatbelt, stunt, careless, dui, insurance, registration, camera, other]\n' +
-    'PROVINCE: [2-letter province code where violation occurred, e.g. ON, BC, QC, or unknown]\n' +
-    'MUNICIPALITY: [city or municipality where violation occurred, e.g. Toronto, Mississauga, Ottawa, Vancouver, Montreal, or unknown]\n' +
-    'DATE: [violation or bill date YYYY-MM-DD, or unknown]\n' +
-    'DUE: [payment due date YYYY-MM-DD, or unknown]\n' +
-    'ADVICE: [1 clear practical sentence: dispute chances and what to do next]\n\n' +
-    'If the image contains NO fine, ticket, or bill of any kind, reply exactly: NOT_A_TICKET';
-
-  function parseReply(text) {
-    function grab(rx) { var m = text.match(rx); return m ? m[1].trim() : null; }
-    var clean = function (v) { return (v && v.toLowerCase() !== 'unknown') ? v : null; };
-    return {
-      amount:       grab(/AMOUNT:\s*([\d.]+)/i),
-      ref:          clean(grab(/REF:\s*([^\n]+)/i)),
-      plate:        clean(grab(/PLATE:\s*([^\n]+)/i)),
-      type:         (grab(/TYPE:\s*(\w+)/i) || '').toLowerCase() || null,
-      province:     clean((grab(/PROVINCE:\s*([^\n]+)/i) || '').toUpperCase()),
-      municipality: clean(grab(/MUNICIPALITY:\s*([^\n]+)/i)),
-      date:         clean(grab(/DATE:\s*([^\n]+)/i)),
-      due:          clean(grab(/DUE:\s*([^\n]+)/i)),
-      advice:       grab(/ADVICE:\s*([^\n]+)/i)
-    };
-  }
-
-  /* ── violation labels + demerit points (carried over) ─────────── */
-  var TYPE_LABELS = {
-    parking:      ['Parking violation', 0],
-    meter:        ['Expired meter', 0],
-    toll:         ['Toll bill', 0],
-    speeding:     ['Speeding', 3],
-    stunt:        ['Stunt driving (50+ km/h over)', 6],
-    redlight:     ['Red light', 3],
-    camera:       ['Camera enforcement', 0],
-    stopsign:     ['Fail to stop (stop sign)', 3],
-    distracted:   ['Distracted / handheld device', 3],
-    careless:     ['Careless driving', 6],
-    seatbelt:     ['Seatbelt violation', 2],
-    hov:          ['HOV lane violation', 3],
-    insurance:    ['No insurance', 0],
-    registration: ['Registration offence', 0],
-    dui:          ['DUI / impaired', 0],
-    other:        ['Traffic violation', 0]
-  };
-
-  /* ── verdict bands — the old app's four-way classification ────── */
-  var SERIOUS = ['dui', 'stunt', 'careless'];
-  var FIGHTY  = ['speeding', 'redlight', 'stopsign', 'distracted', 'hov', 'camera'];
-
-  function verdictFor(p) {
-    var amt = parseFloat(p.amount || '0') || 0;
-    var t   = p.type || 'other';
-    var overdue = p.due ? (new Date(p.due) < new Date()) : false;
-
-    if (overdue) return {
-      key: 'urgent', label: 'Act now', tone: 'red',
-      head: 'Past due — court referral risk',
-      why: 'The due date on this ticket has passed. Late fees compound and an unpaid fine can block your plate renewal. Talk to a paralegal before it escalates.'
-    };
-    if (SERIOUS.indexOf(t) !== -1) return {
-      key: 'serious', label: 'Get representation', tone: 'red',
-      head: 'Worth fighting — with a professional',
-      why: 'This charge carries demerit points, insurance consequences, and in some cases a criminal record. Self-representing is rarely the cheaper option here.'
-    };
-    if (FIGHTY.indexOf(t) !== -1) return {
-      key: 'contest', label: 'Contest it', tone: 'amber',
-      head: 'Good odds — worth disputing',
-      why: 'Charges like this are regularly reduced or withdrawn at Early Resolution, especially where signage, calibration, or officer availability can be challenged.'
-    };
-    if (t === 'parking' && amt > 0 && amt < 60) return {
-      key: 'minor', label: 'Probably just pay', tone: 'green',
-      head: 'Small fine — paying is likely cheaper than your time',
-      why: 'Under $60 with no demerit points. Disputing costs you a morning; pay it unless the sign was genuinely obstructed or missing.'
-    };
-    return {
-      key: 'contest', label: 'Contest it', tone: 'amber',
-      head: 'Worth a second look before you pay',
-      why: 'There is a reasonable dispute path here. A free case review costs nothing and tells you whether it is worth filing.'
-    };
-  }
-
-  /* ── Toronto late-fee ladder (from the published fee schedule) ── */
-  function lateFees(p) {
-    if (p.type !== 'parking') return null;
-    var base = parseFloat(p.amount || '0') || 0;
-    if (!base) return null;
-    return [
-      { when: 'Day 1–15',  add: 0,     total: base,                 note: 'Pay now — no extra charge' },
-      { when: 'Day 16',    add: 15.39, total: base + 15.39,         note: 'Address search fee' },
-      { when: 'Day 31',    add: 32.10, total: base + 47.49,         note: 'Late payment fee' },
-      { when: 'Day 60',    add: 32.10, total: base + 79.59,         note: 'Plate denial — renewal blocked' }
-    ];
-  }
-
-  /* ── UI states ────────────────────────────────────────────────── */
+  /* ── UI states ─────────────────────────────────────────────────── */
   function show(html) { stage.innerHTML = html; stage.hidden = false; }
 
   function showLoading() {
@@ -190,18 +89,17 @@
         '<div class="scan-steps">' +
           '<div class="scan-step on"><span class="scan-step-n">01</span><span>Reading the image</span></div>' +
           '<div class="scan-step"><span class="scan-step-n">02</span><span>Extracting charge &amp; deadline</span></div>' +
-          '<div class="scan-step"><span class="scan-step-n">03</span><span>Building your verdict</span></div>' +
+          '<div class="scan-step"><span class="scan-step-n">03</span><span>Working out what it costs you</span></div>' +
         '</div>' +
         '<div class="scan-bar"><i></i></div>' +
-        '<p class="scan-hint mono">Usually under 8 seconds</p>' +
+        '<p class="scan-hint mono">Usually 5–15 seconds</p>' +
       '</div>'
     );
     var steps = stage.querySelectorAll('.scan-step'), i = 0;
-    var tick = setInterval(function () {
-      i++; if (i >= steps.length) { clearInterval(tick); return; }
+    stage._tick = setInterval(function () {
+      i++; if (i >= steps.length) { clearInterval(stage._tick); return; }
       steps[i].classList.add('on');
-    }, 2200);
-    stage._tick = tick;
+    }, 3500);
   }
 
   function showError(msg) {
@@ -215,179 +113,344 @@
       '</div>'
     );
     $('[data-retry]', stage).addEventListener('click', function () {
-      stage.hidden = true; input.value = '';
-      setCompact(false);
+      stage.hidden = true; input.value = ''; setCompact(false);
       zone.scrollIntoView({ block: 'center' });
     });
     track('scan_error', msg);
   }
 
-  /* ── the verdict screen ───────────────────────────────────────── */
-  function renderVerdict(p) {
+  /* ── verdict banding, now Ontario-aware ────────────────────────── */
+  function verdictFor(t, o) {
+    var overdue = t.due_date ? (new Date(t.due_date) < new Date()) : false;
+
+    if (String(t.doc_type) === 'dui') return {
+      key: 'criminal', label: 'Criminal charge', tone: 'red',
+      head: 'This is a Criminal Code charge — get a lawyer',
+      why: 'Impaired driving is prosecuted under the Criminal Code, not the Highway Traffic Act. A conviction means a criminal record. Licensed paralegals cannot represent you on this; you need a lawyer, and soon.'
+    };
+    if (overdue) return {
+      key: 'urgent', label: 'Act now', tone: 'red',
+      head: 'Past the date on this ticket',
+      why: 'The response window printed on this ticket has passed. Depending on the municipality that can mean added fees, a conviction registered in your absence, or a block on renewing your plate. Get advice today.'
+    };
+    if (o.worthFighting === 'strongly') return {
+      key: 'serious', label: 'Get representation', tone: 'red',
+      head: 'Worth fighting — with a professional',
+      why: 'This charge carries ' + o.demerit + ' demerit points and a serious insurance consequence. Representation usually costs far less than the premium increase.'
+    };
+    if (o.worthFighting === 'usually') return {
+      key: 'contest', label: 'Worth disputing', tone: 'amber',
+      head: 'Good odds — worth challenging',
+      why: 'Charges like this are regularly reduced or withdrawn at early resolution, and a reduction to a no-points offence protects your insurance.'
+    };
+    if (o.demerit === 0 && (parseFloat(t.amount) || 0) < 60) return {
+      key: 'minor', label: 'Probably just pay', tone: 'green',
+      head: 'Small fine, no points',
+      why: 'Under $60 with no demerit points and no insurance consequence. Disputing it will cost you more in time than the ticket is worth, unless the sign was genuinely missing or obscured.'
+    };
+    return {
+      key: 'contest', label: 'Worth a look', tone: 'amber',
+      head: 'Worth a second look before you pay',
+      why: 'There is a reasonable dispute path here. A free case review costs nothing and tells you whether it is worth filing.'
+    };
+  }
+
+  function row(label, value) {
+    if (!value && value !== 0) return '';
+    return '<div class="td-row"><span class="td-l">' + label + '</span>' +
+           '<span class="td-v mono">' + esc(value) + '</span></div>';
+  }
+
+  /* ── the verdict screen ────────────────────────────────────────── */
+  function renderVerdict(t) {
     if (stage._tick) clearInterval(stage._tick);
-    state.parsed = p;
+    state.ticket = t;
     setCompact(true);
 
-    var info  = TYPE_LABELS[p.type] || [p.type ? p.type.replace(/_/g, ' ') : 'Violation', 0];
-    var v     = verdictFor(p);
-    var fees  = lateFees(p);
-    var firms = window.driveeMatchFirms(p.type);
+    var o       = ON.offence(t.doc_type);
+    var v       = verdictFor(t, o);
+    var regime  = ON.parkingRegime(t.municipality);
+    var parking = ON.isParking(t.doc_type);
+    var firms   = window.driveeMatchFirms(t.doc_type);
+    var cost    = ON.costPicture({ type: t.doc_type, amount: t.amount }, firms[0] && firms[0].from);
+    state.firms = firms;
+    state.cost  = cost;
 
-    function row(label, value) {
-      if (!value) return '';
-      return '<div class="td-row"><span class="td-l">' + label + '</span>' +
-             '<span class="td-v mono">' + esc(value) + '</span></div>';
+    /* low-confidence banner — say so rather than quietly being wrong */
+    var confidenceHtml = '';
+    if (t.confidence !== 'high') {
+      var missing = (t.unreadable_fields || []).filter(Boolean);
+      confidenceHtml =
+        '<div class="conf-warn' + (t.confidence === 'low' ? ' conf-low' : '') + '">' +
+          '<strong>' + (t.confidence === 'low' ? 'Low confidence read.' : 'Partial read.') + '</strong> ' +
+          (missing.length
+            ? 'These were not clearly legible: ' + esc(missing.join(', ')) + '. '
+            : '') +
+          'Check the figures below against the paper ticket before acting on them.' +
+        '</div>';
     }
 
-    var feeHtml = '';
-    if (fees) {
-      feeHtml =
+    /* Toronto fee ladder, or the general Ontario deadline note */
+    var deadlineHtml = '';
+    var ladder = (parking && regime.hasFeeLadder) ? ON.torontoFeeLadder(t.amount) : null;
+    if (ladder) {
+      deadlineHtml =
         '<div class="fee-block">' +
-          '<h4 class="block-h">The cost of waiting</h4>' +
+          '<h4 class="block-h">The cost of waiting <span class="tag-exact">exact</span></h4>' +
           '<div class="fee-rows">' +
-            fees.map(function (f, i) {
+            ladder.rows.map(function (f, i) {
               return '<div class="fee-row' + (i === 0 ? ' now' : '') + '">' +
                 '<span class="fee-when mono">' + f.when + '</span>' +
                 '<span class="fee-note">' + f.note + '</span>' +
-                '<span class="fee-total mono">$' + f.total.toFixed(2) + '</span>' +
+                '<span class="fee-total mono">' + money(f.total) + '</span>' +
               '</div>';
             }).join('') +
           '</div>' +
+          '<p class="src-note">' + esc(ladder.source) + '</p>' +
+        '</div>';
+    } else {
+      deadlineHtml =
+        '<div class="fee-block">' +
+          '<h4 class="block-h">How this one works in ' + esc(regime.body) + '</h4>' +
+          '<p class="regime-note">' + esc(parking ? regime.route : provincialRoute()) + '</p>' +
+          '<p class="regime-dead">' + esc(parking ? regime.deadlineNote : PROVINCIAL_DEADLINE) + '</p>' +
         '</div>';
     }
+
+    /* the pricing picture */
+    var costHtml = renderCostBlock(cost, o, firms[0]);
 
     show(
       '<div class="verdict card" data-tone="' + v.tone + '">' +
         '<div class="verdict-head">' +
           '<span class="pill pill-live"><span class="dot dot-pulse"></span>Scan complete</span>' +
-          (p.ref ? '<span class="mono verdict-ref">' + esc(p.ref) + '</span>' : '') +
+          (t.ticket_number ? '<span class="mono verdict-ref">' + esc(t.ticket_number) + '</span>' : '') +
         '</div>' +
 
         '<div class="verdict-body">' +
+          confidenceHtml +
           '<div class="verdict-badge">' + esc(v.label) + '</div>' +
           '<h3 class="verdict-h">' + esc(v.head) + '</h3>' +
-          '<p class="lede">' + esc(p.advice || v.why) + '</p>' +
+          '<p class="lede">' + esc(t.advice || v.why) + '</p>' +
+          (t.advice ? '<p class="verdict-why">' + esc(v.why) + '</p>' : '') +
 
           '<div class="td-grid mt-24">' +
-            row('Violation', info[0]) +
-            row('Amount', p.amount ? '$' + p.amount : null) +
-            row('Plate', p.plate) +
-            row('Issued', p.date) +
-            row('Due', p.due) +
-            row('Where', p.municipality) +
-            (info[1] > 0 ? row('Demerit points', info[1] + ' pts') : '') +
+            row('Offence', o.label) +
+            row('Amount', t.amount ? money(t.amount) : null) +
+            row('Demerit points', o.demerit > 0 ? o.demerit + ' pts' : 'None') +
+            row('Plate', t.plate) +
+            row('Issued', t.issued_date) +
+            row('Due', t.due_date) +
+            row('Where', t.municipality) +
+            row('Section', t.statute_section) +
           '</div>' +
 
-          feeHtml +
+          (o.note ? '<p class="offence-note">' + esc(o.note) + '</p>' : '') +
+
+          deadlineHtml +
+          costHtml +
 
           '<div class="cta-band">' +
             '<div>' +
-              '<h4 class="block-h">' + firms.length + ' vetted firms handle this charge</h4>' +
-              '<p class="cta-sub">Free case review. No commission, no upsells — we pass your ticket to the firm you pick and nobody else.</p>' +
+              '<h4 class="block-h">' + firms.length + ' ' +
+                (firms.length === 1 ? 'firm' : 'firms') + ' can take this charge</h4>' +
+              '<p class="cta-sub">Free case review, no commission. We pass your ticket to the one firm you pick and nobody else.</p>' +
             '</div>' +
-            '<button class="btn btn-amber btn-lg" type="button" data-firms>See my options →</button>' +
+            '<button class="btn btn-amber btn-lg" type="button" data-firms>See who can help →</button>' +
           '</div>' +
         '</div>' +
       '</div>'
     );
 
-    $('[data-firms]', stage).addEventListener('click', function () { renderFirms(firms); });
-    track('scan_verdict', v.key + ':' + (p.type || '?'));
+    $('[data-firms]', stage).addEventListener('click', function () { renderFirms(); });
+    track('scan_verdict', v.key + ':' + (t.doc_type || '?') + ':' + t.confidence);
   }
 
-  /* ── matched firms ────────────────────────────────────────────── */
-  function renderFirms(firms) {
+  var PROVINCIAL_DEADLINE = 'You generally have 15 days from the issue date to choose an option. ' +
+    'Do nothing and the court can convict you in your absence, which puts the points on your record automatically.';
+
+  function provincialRoute() {
+    return 'This is a Highway Traffic Act offence, prosecuted under the Provincial Offences Act. The back of the ticket gives you three options: pay it, ask for an early resolution meeting with a prosecutor, or request a trial. Choosing an option is what stops a conviction being registered against you by default.';
+  }
+
+  /* ── the pricing block — "help them with pricing" ──────────────── */
+  function renderCostBlock(cost, o, cheapest) {
+    if (!cost.fine && !cost.hasInsuranceImpact) return '';
+
+    var rows = '';
+    rows += '<div class="cost-row"><span class="cost-l">The fine itself</span>' +
+            '<span class="cost-v mono">' + (cost.fine ? money(cost.fine) : '—') + '</span></div>';
+
+    if (cost.demerit > 0) {
+      rows += '<div class="cost-row"><span class="cost-l">Demerit points</span>' +
+              '<span class="cost-v mono">' + cost.demerit + ' pts</span></div>';
+    }
+
+    if (cost.hasInsuranceImpact) {
+      rows += '<div class="cost-row"><span class="cost-l">Insurance over ' + cost.insuranceYears +
+              ' yrs <span class="tag-est">estimate</span></span>' +
+              '<span class="cost-v mono">' + money0(cost.insuranceLow) + '–' + money0(cost.insuranceHigh) + '</span></div>';
+      rows += '<div class="cost-row cost-total"><span class="cost-l">If you just pay it</span>' +
+              '<span class="cost-v mono">' + money0(cost.trueCostLow) + '–' + money0(cost.trueCostHigh) + '</span></div>';
+    }
+
+    var repLow = o.repCost ? o.repCost[0] : null;
+    var repHigh = o.repCost ? o.repCost[1] : null;
+    var repHtml = '';
+    if (repLow) {
+      repHtml =
+        '<div class="cost-row cost-rep"><span class="cost-l">Typical representation ' +
+          '<span class="tag-est">estimate</span></span>' +
+          '<span class="cost-v mono">' + money0(repLow) + '–' + money0(repHigh) + '</span></div>' +
+        (cheapest ? '<div class="cost-row"><span class="cost-l">Cheapest matched firm</span>' +
+          '<span class="cost-v mono">from ' + money0(cheapest.from) + '</span></div>' : '');
+    }
+
+    var callout = '';
+    if (cost.representationPaysOff) {
+      callout = '<p class="cost-callout pays">On these numbers, representation costs less than the insurance increase you would otherwise absorb.</p>';
+    } else if (!cost.hasInsuranceImpact && cost.fine) {
+      callout = '<p class="cost-callout">No demerit points and no insurance consequence, so the only thing at stake is the fine itself.</p>';
+    }
+
+    return (
+      '<div class="cost-block">' +
+        '<h4 class="block-h">What it actually costs you</h4>' +
+        '<div class="cost-rows">' + rows + repHtml + '</div>' +
+        callout +
+        '<p class="src-note">Fines and demerit points are exact. Insurance and representation figures are ' +
+        'estimates for an Ontario driver and vary by insurer, record and firm — confirm at your free consultation.</p>' +
+      '</div>'
+    );
+  }
+
+  /* ── matched firms, with pricing ───────────────────────────────── */
+  function renderFirms() {
+    var firms = state.firms;
+    var t = state.ticket;
+    var o = ON.offence(t.doc_type);
+    var needsLawyer = window.DRIVEE_CRIMINAL.indexOf(String(t.doc_type)) !== -1;
+
     show(
       '<div class="card card-pad">' +
         '<button class="lv-back" type="button" data-back>‹ Back to verdict</button>' +
-        '<div class="eyebrow eyebrow-amber mt-16">Matched for your ticket</div>' +
-        '<h3 class="mt-16">Pick a paralegal — free case review</h3>' +
+        '<div class="eyebrow eyebrow-amber mt-16">Matched to your charge</div>' +
+        '<h3 class="mt-16">' + (needsLawyer ? 'Firms with lawyers — free case review' : 'Pick a representative — free case review') + '</h3>' +
+        '<p class="firms-intro">Showing firms that handle <strong>' + esc(o.label.toLowerCase()) + '</strong>' +
+          (t.municipality ? ' and cover ' + esc(t.municipality) : '') + ', cheapest first.' +
+          (needsLawyer ? ' Paralegals cannot represent on Criminal Code charges, so only firms with lawyers are listed.' : '') +
+        '</p>' +
+
+        (o.repCost && o.repCost[0]
+          ? '<div class="price-hint">Typical cost for this charge in Ontario: <strong>' +
+             money0(o.repCost[0]) + '–' + money0(o.repCost[1]) + '</strong> <span class="tag-est">estimate</span></div>'
+          : '') +
+
         '<div class="firm-list mt-24">' +
           firms.map(function (f, i) {
             return '<button class="firm" type="button" data-firm="' + i + '">' +
               '<div class="firm-top">' +
                 '<span class="firm-name">' + esc(f.name) + '</span>' +
-                '<span class="firm-from mono">from $' + f.from + '</span>' +
+                '<span class="firm-from mono">from ' + money0(f.from) + '</span>' +
                 '<span class="firm-arrow">›</span>' +
               '</div>' +
               '<div class="firm-claim">' + esc(f.claim) + '</div>' +
               '<div class="firm-perks">' +
-                f.perks.slice(0, 3).map(function (p) {
+                '<span class="firm-perk firm-licence">' +
+                  (f.licence === 'lawyers+paralegals' ? 'Lawyers + paralegals' : 'Licensed paralegals') +
+                '</span>' +
+                '<span class="firm-perk">' + esc(f.coverage) + '</span>' +
+                f.perks.slice(0, 2).map(function (p) {
                   return '<span class="firm-perk">' + esc(p) + '</span>';
                 }).join('') +
               '</div>' +
             '</button>';
           }).join('') +
         '</div>' +
-        '<p class="trust">🔒 Free consultation. We forward your details to the firm you choose — never to anyone else.</p>' +
+        '<p class="trust">🔒 Free consultation. We forward your details to the firm you choose — never to anyone else. ' +
+        'Drivee is not a law firm and takes no commission.</p>' +
       '</div>'
     );
 
-    $('[data-back]', stage).addEventListener('click', function () { renderVerdict(state.parsed); });
+    $('[data-back]', stage).addEventListener('click', function () { renderVerdict(state.ticket); });
     stage.querySelectorAll('[data-firm]').forEach(function (el) {
-      el.addEventListener('click', function () {
-        renderFirmDetail(firms, +el.getAttribute('data-firm'));
-      });
+      el.addEventListener('click', function () { renderFirmDetail(+el.getAttribute('data-firm')); });
     });
-    track('firms_shown', String(firms.length));
+    track('firms_shown', String(firms.length) + ':' + t.doc_type);
   }
 
-  function renderFirmDetail(firms, idx) {
-    var f = firms[idx];
+  function renderFirmDetail(idx) {
+    var f = state.firms[idx];
     if (!f) return;
+    var o = ON.offence(state.ticket.doc_type);
+
     show(
       '<div class="card card-pad">' +
         '<button class="lv-back" type="button" data-back>‹ Back to firms</button>' +
         '<div class="eyebrow eyebrow-amber mt-16">Free case review · Drivee partner</div>' +
         '<h3 class="mt-16">' + esc(f.name) + '</h3>' +
         '<div class="firm-est">✓ ' + esc(f.foundedLabel) + '</div>' +
-        '<blockquote class="firm-quote">' + esc(f.claim) + '</blockquote>' +
+        '<blockquote class="firm-quote">' + esc(f.claim) +
+          '<cite>— ' + esc(f.name) + '’s own published claim</cite></blockquote>' +
+
         '<div class="fact-grid">' +
+          '<div class="fact"><span class="fact-l">Licence</span><span class="fact-v">' +
+            (f.licence === 'lawyers+paralegals' ? 'Lawyers &amp; paralegals' : 'Licensed paralegals') + '</span></div>' +
           '<div class="fact"><span class="fact-l">Team</span><span class="fact-v">' + esc(f.team) + '</span></div>' +
-          '<div class="fact"><span class="fact-l">Service area</span><span class="fact-v">' + esc(f.area) + '</span></div>' +
-          '<div class="fact"><span class="fact-l">Pricing</span><span class="fact-v">from $' + f.from + '</span></div>' +
+          '<div class="fact"><span class="fact-l">Coverage</span><span class="fact-v">' + esc(f.coverage) + '</span></div>' +
+          '<div class="fact"><span class="fact-l">Their listed price</span><span class="fact-v">from ' + money0(f.from) + '</span></div>' +
         '</div>' +
+
+        (o.repCost && o.repCost[0]
+          ? '<div class="price-hint mt-16">For ' + esc(o.label.toLowerCase()) + ', Ontario representation typically runs <strong>' +
+            money0(o.repCost[0]) + '–' + money0(o.repCost[1]) + '</strong>. <span class="tag-est">estimate</span> ' +
+            'Ask them to confirm a flat fee in writing before you retain.</div>'
+          : '') +
+
         '<a class="reviews-link" target="_blank" rel="noopener nofollow" ' +
-          'href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(f.name + ' Toronto') + '">' +
+          'href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(f.name + ' Ontario') + '">' +
           '<span class="reviews-star">★</span>' +
           '<span><b>Read real Google reviews</b><br><small>Opens Google Maps — fresh and unfiltered</small></span>' +
           '<span class="reviews-arrow">↗</span>' +
         '</a>' +
-        '<button class="btn btn-amber btn-lg btn-block mt-24" type="button" data-pick>' +
-          'Continue → free case review' +
-        '</button>' +
-        '<p class="trust">Quoted lines are the firm\'s own public claims, not Drivee\'s assessment. ' +
+
+        '<button class="btn btn-amber btn-lg btn-block mt-24" type="button" data-pick>Continue → free case review</button>' +
+        '<p class="trust">Quoted lines are the firm’s own public claims, not Drivee’s assessment. ' +
         'We forward your info to this firm only.</p>' +
       '</div>'
     );
-    $('[data-back]', stage).addEventListener('click', function () { renderFirms(firms); });
-    $('[data-pick]', stage).addEventListener('click', function () { renderLeadForm(firms, idx); });
+    $('[data-back]', stage).addEventListener('click', function () { renderFirms(); });
+    $('[data-pick]', stage).addEventListener('click', function () { renderLeadForm(idx); });
     track('firm_opened', f.id);
   }
 
-  /* ── lead form ────────────────────────────────────────────────── */
-  function ticketSummary(p) {
+  /* ── lead form ─────────────────────────────────────────────────── */
+  function ticketSummary(t) {
+    var o = ON.offence(t.doc_type);
     var s = [];
-    if (p.amount) s.push('Fine: $' + p.amount);
-    if (p.ref)    s.push('Ref: ' + p.ref);
-    if (p.plate)  s.push('Plate: ' + p.plate);
-    if (p.type)   s.push('Type: ' + String(p.type).replace(/_/g, ' '));
-    if (p.due)    s.push('Due: ' + p.due);
-    if (p.municipality) s.push('Where: ' + p.municipality);
-    return s.join(' · ') || 'Ticket scanned (details to follow)';
+    s.push('Charge: ' + o.label);
+    if (t.amount) s.push('Fine: ' + money(t.amount));
+    if (o.demerit) s.push('Demerit: ' + o.demerit + ' pts');
+    if (t.ticket_number) s.push('Ref: ' + t.ticket_number);
+    if (t.plate) s.push('Plate: ' + t.plate);
+    if (t.issued_date) s.push('Issued: ' + t.issued_date);
+    if (t.due_date) s.push('Due: ' + t.due_date);
+    if (t.municipality) s.push('Where: ' + t.municipality + (t.province ? ', ' + t.province : ''));
+    if (t.statute_section) s.push('Section: ' + t.statute_section);
+    if (t.confidence !== 'high') s.push('(scan confidence: ' + t.confidence + ')');
+    return s.join(' · ');
   }
 
-  function renderLeadForm(firms, idx) {
-    var f = firms[idx];
-    var p = state.parsed || {};
-    state.firm = f;
+  function renderLeadForm(idx) {
+    var f = state.firms[idx];
+    var t = state.ticket;
 
     show(
       '<div class="card card-pad">' +
         '<button class="lv-back" type="button" data-back>‹ Back</button>' +
         '<div class="eyebrow eyebrow-amber mt-16">Free case review</div>' +
         '<h3 class="mt-16">with ' + esc(f.name) + '</h3>' +
-        '<div class="lead-summary mono">' + esc(ticketSummary(p)) + '</div>' +
+        '<div class="lead-summary mono">' + esc(ticketSummary(t)) + '</div>' +
         '<form class="lead-form" novalidate>' +
           '<label class="fld"><span>Your name</span>' +
             '<input name="name" autocomplete="name" required placeholder="Alex Chen"></label>' +
@@ -401,32 +464,32 @@
           '<button class="btn btn-amber btn-lg btn-block" type="submit">Request my free review</button>' +
           '<p class="lead-err" hidden></p>' +
           '<p class="trust">By sending this you agree we may pass your ticket details to ' + esc(f.name) +
-          '. Drivee is not a law firm and takes no commission.</p>' +
+          '. Drivee is not a law firm, gives no legal advice, and takes no commission.</p>' +
         '</form>' +
       '</div>'
     );
 
-    $('[data-back]', stage).addEventListener('click', function () { renderFirmDetail(firms, idx); });
+    $('[data-back]', stage).addEventListener('click', function () { renderFirmDetail(idx); });
     $('.lead-form', stage).addEventListener('submit', function (e) {
       e.preventDefault();
-      submitLead(e.target, f, p);
+      submitLead(e.target, f, t);
     });
     track('lead_form', f.id);
   }
 
-  function submitLead(form, firm, p) {
+  function submitLead(form, firm, t) {
     if (state.busy) return;
-    var err  = $('.lead-err', form);
-    var btn  = form.querySelector('button[type=submit]');
+    var err = $('.lead-err', form);
+    var btn = form.querySelector('button[type=submit]');
     var data = {
-      name:  form.name.value.trim(),
+      name: form.name.value.trim(),
       email: form.email.value.trim(),
       phone: form.phone.value.trim(),
-      note:  form.note.value.trim(),
-      company: form.company.value,          // honeypot
-      firmName:  firm.name,
+      note: form.note.value.trim(),
+      company: form.company.value,
+      firmName: firm.name,
       firmEmail: firm.email,
-      ticket: ticketSummary(p)
+      ticket: ticketSummary(t)
     };
 
     if (!data.name || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.email)) {
@@ -435,31 +498,26 @@
       return;
     }
 
-    state.busy = true;
-    btn.disabled = true;
-    btn.textContent = 'Sending…';
-    err.hidden = true;
+    state.busy = true; btn.disabled = true; btn.textContent = 'Sending…'; err.hidden = true;
 
     fetch('/api/lead', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     })
-    .then(function (r) { return r.json().catch(function () { return { ok: r.ok }; }); })
-    .then(function (res) {
-      state.busy = false;
-      if (!res || !res.ok) throw new Error((res && res.error) || 'Send failed');
-      renderThanks(firm);
-      track('lead_sent', firm.id);
-    })
-    .catch(function (e) {
-      state.busy = false;
-      btn.disabled = false;
-      btn.textContent = 'Request my free review';
-      err.hidden = false;
-      err.innerHTML = esc(e.message || 'Could not send') +
-        ' — you can email them directly at <a href="mailto:' + esc(firm.email) + '">' + esc(firm.email) + '</a>.';
-    });
+      .then(function (r) { return r.json().catch(function () { return { ok: r.ok }; }); })
+      .then(function (res) {
+        state.busy = false;
+        if (!res || !res.ok) throw new Error((res && res.error) || 'Send failed');
+        renderThanks(firm);
+        track('lawyer_lead', firm.id);
+      })
+      .catch(function (e) {
+        state.busy = false; btn.disabled = false;
+        btn.textContent = 'Request my free review';
+        err.hidden = false;
+        err.innerHTML = esc(e.message || 'Could not send') +
+          ' — you can email them directly at <a href="mailto:' + esc(firm.email) + '">' + esc(firm.email) + '</a>.';
+      });
   }
 
   function renderThanks(firm) {
@@ -476,7 +534,7 @@
     );
   }
 
-  /* ── intake ───────────────────────────────────────────────────── */
+  /* ── intake ────────────────────────────────────────────────────── */
   function handleFile(file) {
     if (!file) return;
     if (!/^image\//.test(file.type) && !/\.(jpe?g|png|webp|heic|heif)$/i.test(file.name || '')) {
@@ -489,13 +547,12 @@
 
     shrink(file, 1800, 0.85, function (dataUrl) {
       if (dataUrl) return send(dataUrl, 'image/jpeg');
-      // HEIC the browser cannot decode — send the original bytes and hope
       var r = new FileReader();
       r.onerror = function () { showError('Could not read the photo — try selecting it again'); };
-      r.onload  = function (ev) {
-        var t = file.type;
-        if (['image/jpeg', 'image/png', 'image/gif', 'image/webp'].indexOf(t) === -1) t = 'image/jpeg';
-        send(ev.target.result, t);
+      r.onload = function (ev) {
+        var type = file.type;
+        if (['image/jpeg', 'image/png', 'image/gif', 'image/webp'].indexOf(type) === -1) type = 'image/jpeg';
+        send(ev.target.result, type);
       };
       r.readAsDataURL(file);
     });
@@ -504,47 +561,31 @@
   function send(dataUrl, mediaType) {
     var base64 = dataUrl.split(',')[1];
     var ctrl = (typeof AbortController === 'function') ? new AbortController() : null;
-    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 45000) : null;
+    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 60000) : null;
 
-    fetch('/api/claude', {
+    fetch('/api/scan-ticket', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       signal: ctrl ? ctrl.signal : undefined,
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 500,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
-            { type: 'text', text: VISION_PROMPT }
-          ]
-        }]
+      body: JSON.stringify({ image: base64, mediaType: mediaType })
+    })
+      .then(function (r) {
+        if (timer) clearTimeout(timer);
+        return r.json().catch(function () { throw new Error('Server error (' + r.status + ')'); });
       })
-    })
-    .then(function (r) {
-      if (timer) clearTimeout(timer);
-      if (!r.ok) throw new Error('Server error (' + r.status + ')');
-      return r.json();
-    })
-    .then(function (data) {
-      if (data.error) throw new Error(data.error.message || 'Scan failed');
-      var text = (data.content && data.content[0] && data.content[0].text || '').trim();
-      if (!text || text.indexOf('NOT_A_TICKET') !== -1) {
-        showError('No ticket detected — try a clearer photo');
-        return;
-      }
-      renderVerdict(parseReply(text));
-    })
-    .catch(function (e) {
-      if (timer) clearTimeout(timer);
-      showError(e && e.name === 'AbortError'
-        ? 'Scan timed out — try again with a smaller photo'
-        : (e.message || 'Could not reach Drivee — check your connection'));
-    });
+      .then(function (res) {
+        if (!res.ok) { showError(res.error || 'No ticket detected — try a clearer photo'); return; }
+        renderVerdict(res.ticket);
+      })
+      .catch(function (e) {
+        if (timer) clearTimeout(timer);
+        showError(e && e.name === 'AbortError'
+          ? 'Scan timed out — try again with a smaller photo'
+          : (e.message || 'Could not reach Drivee — check your connection'));
+      });
   }
 
-  /* ── dropzone wiring ──────────────────────────────────────────── */
+  /* ── dropzone wiring ───────────────────────────────────────────── */
   zone.addEventListener('click', function () { input.click(); });
   zone.addEventListener('keydown', function (e) {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); }
@@ -562,7 +603,6 @@
     if (f) handleFile(f);
   });
 
-  // paste a screenshot straight onto the page
   addEventListener('paste', function (e) {
     var items = (e.clipboardData && e.clipboardData.items) || [];
     for (var i = 0; i < items.length; i++) {
@@ -572,4 +612,7 @@
       }
     }
   });
+
+  // expose for the local end-to-end harness
+  window.__driveeRenderVerdict = renderVerdict;
 })();
