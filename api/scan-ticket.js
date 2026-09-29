@@ -33,6 +33,14 @@ const TICKET_SCHEMA = {
       type: 'boolean',
       description: 'True only if this image shows a real traffic/parking ticket, fine, or toll bill.'
     },
+    is_ontario: {
+      type: 'boolean',
+      description: 'True if this ticket was issued in Ontario, Canada. False for any other province, territory, state or country. If the jurisdiction genuinely cannot be determined, infer it from the issuing body, court, or address printed on the ticket; only guess true when the evidence points to Ontario.'
+    },
+    jurisdiction: {
+      anyOf: [{ type: 'string' }, { type: 'null' }],
+      description: 'Plain name of the issuing jurisdiction when it is NOT Ontario, e.g. "Quebec", "New York State", "British Columbia". Null when it is Ontario.'
+    },
     doc_type: {
       type: 'string',
       enum: [
@@ -61,14 +69,20 @@ const TICKET_SCHEMA = {
     advice: { type: 'string', description: 'One plain-English sentence on dispute prospects and the next step.' }
   },
   required: [
-    'is_ticket', 'doc_type', 'amount', 'ticket_number', 'plate', 'province',
-    'municipality', 'issued_date', 'due_date', 'location', 'offence_text',
-    'statute_section', 'speed_over', 'confidence', 'unreadable_fields', 'advice'
+    'is_ticket', 'is_ontario', 'jurisdiction', 'doc_type', 'amount', 'ticket_number',
+    'plate', 'province', 'municipality', 'issued_date', 'due_date', 'location',
+    'offence_text', 'statute_section', 'speed_over', 'confidence',
+    'unreadable_fields', 'advice'
   ],
   additionalProperties: false
 };
 
-const SYSTEM = `You read photographs of Canadian traffic and parking tickets, with a focus on Ontario, and extract their fields.
+const SYSTEM = `You read photographs of traffic and parking tickets and extract their fields. Drivee serves ONTARIO, CANADA only, so establishing the jurisdiction is part of the job.
+
+Deciding the jurisdiction:
+- Ontario tickets name an Ontario municipality (Toronto, Ottawa, Mississauga, Hamilton, London, Brampton, Windsor, Kingston, …), cite the Highway Traffic Act / Provincial Offences Act, or name an Ontario court office or the City's administrative penalty process.
+- Set is_ontario false for any other province or territory, any US state, or any other country — and put the plain jurisdiction name in "jurisdiction". A 407 ETR, 412 or 418 toll bill is Ontario.
+- Still extract every other field normally even when is_ontario is false. The driver is told we do not cover their jurisdiction, and a correct read is still useful to them.
 
 Ontario context you should apply:
 - Parking tickets are municipal. Toronto and many other municipalities run an Administrative Penalty System: the response is a screening review, not a court date.
@@ -150,9 +164,19 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ ok: false, notATicket: true, error: 'No ticket detected — try a clearer photo of the whole ticket.' });
     }
 
+    // Out-of-province: still hand back the read — it is useful to the driver —
+    // but flag it, because our firms are licensed in Ontario and the fee and
+    // demerit rules below the fold are Ontario's.
+    const province = String(ticket.province || '').toUpperCase();
+    const outOfProvince = Boolean(
+      ticket.is_ontario === false || (province && province !== 'ON')
+    );
+
     return res.status(200).json({
       ok: true,
       ticket,
+      outOfProvince,
+      jurisdiction: outOfProvince ? (ticket.jurisdiction || province || null) : null,
       usage: { input: response.usage.input_tokens, output: response.usage.output_tokens }
     });
 

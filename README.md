@@ -109,9 +109,17 @@ beside an image to assert on specific fields. Ticket photos are gitignored.
 | `RESEND_API_KEY`   | `/api/lead`, `/api/contact`, `/api/mechanic`, reminders |
 | `VAPID_*`          | web push |
 
-## Ontario, not just Toronto
+## Ontario only — and it enforces that
 
-Two separate systems, and conflating them gives wrong advice:
+Drivee serves Ontario. The scanner returns `is_ontario`, and anything else
+(another province, a US state) gets a distinct screen: it still shows what was
+read off the ticket, because that is useful anywhere, but it suppresses the
+Ontario fee ladder, the demerit points, the cost model and the firm matching,
+and says plainly that we cannot advise on it. Guessing with Ontario rules on a
+Quebec ticket would be worse than declining.
+
+Within Ontario there are two separate systems, and conflating them gives wrong
+advice:
 
 * **Parking is municipal.** Toronto and ~24 other municipalities run an
   Administrative Penalty System — you request a *screening review*, not a court

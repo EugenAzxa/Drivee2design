@@ -119,9 +119,27 @@
     track('scan_error', msg);
   }
 
+  /* Whole days from today until `ymd`. Negative means the date has passed.
+     Compared date-to-date, not timestamp-to-timestamp: "2026-09-29" parses as
+     midnight UTC, so a naive `new Date(due) < new Date()` calls a ticket due
+     TODAY overdue from one minute past midnight onward. Telling somebody they
+     have missed a deadline they still have all day to meet is the kind of
+     wrong that makes them give up. */
+  function daysUntil(ymd) {
+    if (!ymd) return null;
+    var m = String(ymd).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return null;
+    var due = new Date(+m[1], +m[2] - 1, +m[3]);          // local midnight
+    if (isNaN(due)) return null;
+    var now = new Date();
+    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return Math.round((due - today) / 86400000);
+  }
+
   /* ── verdict banding, now Ontario-aware ────────────────────────── */
   function verdictFor(t, o) {
-    var overdue = t.due_date ? (new Date(t.due_date) < new Date()) : false;
+    var days = daysUntil(t.due_date);
+    var overdue = days !== null && days < 0;
 
     if (String(t.doc_type) === 'dui') return {
       key: 'criminal', label: 'Criminal charge', tone: 'red',
@@ -131,7 +149,15 @@
     if (overdue) return {
       key: 'urgent', label: 'Act now', tone: 'red',
       head: 'Past the date on this ticket',
-      why: 'The response window printed on this ticket has passed. Depending on the municipality that can mean added fees, a conviction registered in your absence, or a block on renewing your plate. Get advice today.'
+      why: 'The response window printed on this ticket passed ' +
+           (days === -1 ? 'yesterday' : Math.abs(days) + ' days ago') +
+           '. Depending on the municipality that can mean added fees, a conviction registered in your absence, or a block on renewing your plate. Get advice today.'
+    };
+    if (days !== null && days <= 3) return {
+      key: 'urgent', label: days === 0 ? 'Due today' : 'Due in ' + days + (days === 1 ? ' day' : ' days'),
+      tone: 'red',
+      head: days === 0 ? 'The deadline on this ticket is today' : 'You have ' + days + (days === 1 ? ' day' : ' days') + ' left',
+      why: 'You have not missed it — but you are close. Whatever you decide, do it before the date printed on the ticket, because the options narrow sharply once it passes.'
     };
     if (o.worthFighting === 'strongly') return {
       key: 'serious', label: 'Get representation', tone: 'red',
@@ -268,6 +294,62 @@
 
   var PROVINCIAL_DEADLINE = 'You generally have 15 days from the issue date to choose an option. ' +
     'Do nothing and the court can convict you in your absence, which puts the points on your record automatically.';
+
+  /* ── out-of-province ───────────────────────────────────────────────
+     Drivee covers Ontario. We still show what was read — that is useful
+     on its own — but we do not hand out Ontario fee ladders, Ontario
+     demerit points, or Ontario-licensed firms for a ticket from
+     somewhere else. Saying so plainly beats quietly giving wrong advice. */
+  function renderOutOfProvince(t, jurisdiction) {
+    if (stage._tick) clearInterval(stage._tick);
+    state.ticket = t;
+    setCompact(true);
+
+    var where = jurisdiction || t.municipality || 'outside Ontario';
+
+    show(
+      '<div class="verdict card" data-tone="amber">' +
+        '<div class="verdict-head">' +
+          '<span class="pill pill-live"><span class="dot dot-pulse"></span>Scan complete</span>' +
+          (t.ticket_number ? '<span class="mono verdict-ref">' + esc(t.ticket_number) + '</span>' : '') +
+        '</div>' +
+        '<div class="verdict-body">' +
+          '<div class="verdict-badge">Outside Ontario</div>' +
+          '<h3 class="verdict-h">This looks like a ' + esc(where) + ' ticket</h3>' +
+          '<p class="lede">Drivee only covers Ontario. The deadlines, demerit points and fee rules ' +
+          'we work from are Ontario’s, and the firms we match are licensed here — so we would be ' +
+          'guessing about this one, and we would rather not.</p>' +
+
+          '<div class="td-grid mt-24">' +
+            row('Where', t.jurisdiction || t.municipality) +
+            row('Amount', t.amount ? money(t.amount) : null) +
+            row('Ticket #', t.ticket_number) +
+            row('Plate', t.plate) +
+            row('Issued', t.issued_date) +
+            row('Due', t.due_date) +
+          '</div>' +
+
+          '<p class="oop-note">Here is what we could read off it, in case that saves you squinting at ' +
+          'the paper. For what to do next, check the instructions printed on the ticket itself — every ' +
+          'jurisdiction sets its own response window, and missing it is the expensive part.</p>' +
+
+          '<div class="cta-band">' +
+            '<div>' +
+              '<h4 class="block-h">Got an Ontario ticket too?</h4>' +
+              '<p class="cta-sub">That one we can take all the way — verdict, real cost, and a matched firm.</p>' +
+            '</div>' +
+            '<button class="btn btn-ghost btn-lg" type="button" data-again>Scan another ticket</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    );
+
+    $('[data-again]', stage).addEventListener('click', function () {
+      stage.hidden = true; input.value = ''; setCompact(false);
+      zone.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    track('scan_verdict', 'out_of_province:' + (t.province || '?'));
+  }
 
   function provincialRoute() {
     return 'This is a Highway Traffic Act offence, prosecuted under the Provincial Offences Act. The back of the ticket gives you three options: pay it, ask for an early resolution meeting with a prosecutor, or request a trial. Choosing an option is what stops a conviction being registered against you by default.';
@@ -575,6 +657,7 @@
       })
       .then(function (res) {
         if (!res.ok) { showError(res.error || 'No ticket detected — try a clearer photo'); return; }
+        if (res.outOfProvince) { renderOutOfProvince(res.ticket, res.jurisdiction); return; }
         renderVerdict(res.ticket);
       })
       .catch(function (e) {
@@ -615,4 +698,5 @@
 
   // expose for the local end-to-end harness
   window.__driveeRenderVerdict = renderVerdict;
+  window.__driveeRenderOOP = renderOutOfProvince;
 })();
