@@ -1,10 +1,14 @@
 .DS_Store
 node_modules/
-.vercel
-.env
-.env.local
 APP Design/
+
+# Vercel
+.vercel
+
+# Secrets — everything except the committed template
+.env*
+!.env.example
+
+# Ticket photos may contain a plate, a name, an address. Never commit them.
 tools/tickets/*
 !tools/tickets/README.md
-.env.local
-.env
