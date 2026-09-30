@@ -526,3 +526,171 @@
   background:var(--panel); border:1px solid var(--line);
   font-size:13.5px; color:var(--ink-2); line-height:1.65;
 }
+
+/* ── install badges ──────────────────────────────────────────────── */
+/* Store-badge shape and weight, but they install the PWA. */
+.install-row{ display:flex; flex-wrap:wrap; gap:10px; margin-top:22px; }
+
+.ibadge{
+  display:inline-flex; align-items:center; gap:11px;
+  padding:9px 18px 9px 15px; border-radius:13px;
+  background:linear-gradient(168deg, rgba(255,255,255,.10), rgba(255,255,255,.035));
+  border:1px solid var(--line-2);
+  backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  cursor:pointer; text-align:left; color:var(--ink);
+  transition:transform .18s cubic-bezier(.2,.8,.3,1), border-color .2s, background .2s, box-shadow .2s;
+  min-height:52px;                       /* comfortable thumb target */
+}
+.ibadge:hover{
+  transform:translateY(-2px);
+  border-color:rgba(255,255,255,.34);
+  background:linear-gradient(168deg, rgba(255,255,255,.15), rgba(255,255,255,.06));
+  box-shadow:0 12px 30px rgba(0,0,0,.45);
+}
+.ibadge:active{ transform:translateY(0) scale(.99); }
+.ibadge:focus-visible{ outline:none; box-shadow:0 0 0 4px rgba(45,99,240,.35); }
+
+.ib-ic{ width:25px; height:25px; flex:none; opacity:.95; }
+.ib-tx{ display:flex; flex-direction:column; line-height:1.15; }
+.ib-sub{ font-size:10px; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-3); font-weight:700; }
+.ib-main{ font-size:15px; font-weight:700; letter-spacing:-.02em; margin-top:2px; }
+
+/* once the browser offers a real install, say so */
+.install-row.can-install .ibadge[data-install="primary"]{
+  border-color:rgba(110,155,255,.55);
+  background:linear-gradient(168deg, rgba(45,99,240,.28), rgba(45,99,240,.12));
+}
+
+.install-note{ margin-top:10px; font-size:12.5px; color:var(--ink-3); }
+
+/* ── install instructions sheet ──────────────────────────────────── */
+.install-sheet{ position:fixed; inset:0; z-index:200; display:grid; place-items:center; }
+.is-scrim{
+  position:absolute; inset:0; background:rgba(4,3,9,.72);
+  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  opacity:0; transition:opacity .22s;
+}
+.install-sheet.open .is-scrim{ opacity:1; }
+
+.is-panel{
+  position:relative; width:min(440px, calc(100vw - 32px));
+  max-height:min(86vh, 700px); overflow:auto;
+  padding:28px 26px 26px; border-radius:var(--r-xl);
+  background:linear-gradient(168deg,#16122A,#0C0918);
+  border:1px solid var(--line-2);
+  box-shadow:0 30px 80px rgba(0,0,0,.65);
+  transform:translateY(14px) scale(.98); opacity:0;
+  transition:transform .26s cubic-bezier(.2,.8,.3,1), opacity .22s;
+}
+.install-sheet.open .is-panel{ transform:none; opacity:1; }
+
+.is-x{
+  position:absolute; top:12px; right:14px; width:34px; height:34px;
+  border:0; background:none; color:var(--ink-3); font-size:26px; line-height:1;
+  cursor:pointer; border-radius:10px;
+}
+.is-x:hover{ color:var(--ink); background:var(--panel); }
+
+.is-h{ font-size:20px; padding-right:30px; }
+.is-steps{ margin:20px 0 0; padding:0; list-style:none; counter-reset:s; }
+.is-steps li{
+  position:relative; counter-increment:s; padding:0 0 16px 40px;
+  font-size:14.5px; color:var(--ink-2); line-height:1.6;
+}
+.is-steps li::before{
+  content:counter(s); position:absolute; left:0; top:-1px;
+  width:26px; height:26px; border-radius:8px; display:grid; place-items:center;
+  font-family:var(--mono); font-size:11.5px; font-weight:800;
+  background:var(--blue-dim); border:1px solid rgba(110,155,255,.35); color:#BFD3FF;
+}
+.is-steps strong{ color:var(--ink); }
+.is-steps svg{
+  width:15px; height:15px; display:inline-block; vertical-align:-3px;
+  margin:0 1px; color:var(--blue-lite);
+}
+.is-note{
+  font-size:13px; color:var(--ink-3); line-height:1.6;
+  padding-top:14px; border-top:1px solid var(--line);
+}
+
+@media (max-width:620px){
+  .install-row{ gap:8px; }
+  .ibadge{ flex:1 1 calc(50% - 4px); padding:9px 12px; gap:9px; }
+  .ib-main{ font-size:13.5px; }
+  .ib-sub{ font-size:9px; }
+  .is-panel{ padding:26px 20px 22px; border-radius:var(--r-lg); }
+}
+
+/* ── mobile: tighten the hero so the install row reaches the fold ── */
+@media (max-width:620px){
+  .hero{ padding:88px 0 44px; }
+  .hero h1{ margin-top:16px; }
+
+  /* The long supporting paragraph pushed everything below the fold. Keep the
+     first sentence — the promise — and let the rest wait for the scroll. */
+  .hero-sub{ margin-top:16px; font-size:16px; }
+
+  .hero-grid{ gap:20px; }
+  .hero-badges{ margin-top:18px; gap:8px; }
+  .install-row{ margin-top:16px; }
+
+  .dropzone{ padding:26px 18px; gap:11px; }
+  .dz-ic{ width:52px; height:52px; border-radius:16px; }
+  .dz-ic svg{ width:25px; height:25px; }
+  .dz-sub{ font-size:13.5px; }
+  .hero-proof{ margin-top:22px; padding-top:20px; gap:16px 24px; }
+}
+
+/* very small phones (iPhone SE and similar) */
+@media (max-width:380px){
+  .hero{ padding:80px 0 36px; }
+  .ibadge{ flex:1 1 100%; }
+}
+
+/* the tail of the hero promise is desktop-only; phones get the first line */
+@media (max-width:620px){
+  .hero-sub-more{ display:none; }
+}
+
+/* On a phone the install row is a primary CTA, so it leads; the three trust
+   pills repeat the dropzone note and can wait below it. */
+@media (max-width:620px){
+  .install-row{ margin-top:14px; }
+  .install-note{ margin-top:8px; font-size:12px; }
+  .hero-badges{ margin-top:14px; }
+}
+
+/* Two complete sentences rather than one truncated mid-clause: the phone gets
+   the short promise, the desktop gets the full one. */
+.sub-short{ display:none; }
+.sub-full{ display:inline; }
+@media (max-width:620px){
+  .sub-short{ display:inline; }
+  .sub-full{ display:none; }
+
+  /* Side-by-side pickers reclaim ~60px so the install row clears the fold. */
+  .dz-actions{ flex-wrap:nowrap; gap:8px; }
+  .dz-actions .btn{ width:auto; flex:1 1 0; padding:14px 10px; font-size:14px; }
+  .dz-note{ font-size:11.5px; }
+}
+@media (max-width:340px){
+  .dz-actions{ flex-wrap:wrap; }
+  .dz-actions .btn{ flex:1 1 100%; }
+}
+
+/* Keep both badges the same height — "Android & Chrome" was wrapping. */
+@media (max-width:620px){
+  .ib-main{ white-space:nowrap; font-size:13px; }
+  .ib-sub{ white-space:nowrap; }
+  .ibadge{ padding:9px 10px; gap:8px; align-items:center; }
+  .ib-ic{ width:22px; height:22px; }
+}
+@media (max-width:360px){
+  .ib-main{ font-size:12px; }
+}
+
+/* iOS Safari zooms the whole page when a focused input is under 16px, and the
+   user has to pinch back out. 16px is the threshold, not a preference. */
+@media (pointer:coarse){
+  .fld input, .fld textarea{ font-size:16px; }
+}

@@ -268,3 +268,39 @@ p{ margin:0; }
   .wrap{ padding:0 18px; }
   .foot-grid{ grid-template-columns:1fr; }
 }
+
+/* ── containment: decoration must never widen the page ───────────── */
+/* The ambient .glow-orb blurs are positioned with negative offsets and are
+   wider than a phone viewport, so they were extending the document to 535px
+   at 390px wide — the page could be swiped sideways into empty space.
+   `clip` contains them without creating a scroll container (so it cannot
+   break position:sticky the way overflow:hidden can). */
+html{ overflow-x:clip; }
+@supports not (overflow:clip){ html{ overflow-x:hidden; } }
+
+.hero,
+.band,
+.close-cta{ overflow:clip; }
+@supports not (overflow:clip){
+  .hero, .band, .close-cta{ overflow:hidden; }
+}
+
+/* On a phone the orbs are pure cost — big blurs, no room to read them. */
+@media (max-width:620px){
+  .glow-orb{ max-width:100vw; filter:blur(70px); opacity:.34; }
+}
+
+/* ── touch targets ───────────────────────────────────────────────── */
+/* 44px is the Apple HIG minimum; several of these sat at 33–42px. */
+@media (pointer:coarse), (max-width:900px){
+  .nav-burger{ width:44px; height:44px; }
+  .logo{ min-height:44px; display:inline-flex; align-items:center; }
+  .foot-col a{ min-height:44px; display:flex; align-items:center; padding:2px 0; }
+  .nav-drawer a{ min-height:48px; display:flex; align-items:center; }
+  .foot-bot a{ display:inline-block; padding:6px 2px; }
+}
+
+@media (pointer:coarse), (max-width:900px){
+  /* footer meta links were 33px tall */
+  .foot-bot a{ min-height:44px; display:inline-flex; align-items:center; padding:0 2px; }
+}

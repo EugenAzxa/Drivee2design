@@ -151,3 +151,23 @@ footer a:hover{ color:#7BA5FF; }
   color:#231605!important;
   box-shadow:0 8px 26px rgba(232,155,34,.34);
 }
+
+/* ── footer link row ─────────────────────────────────────────────── */
+/* The markup runs the links together with no whitespace —
+   `</a><a href=…>` — so the browser has no line-break opportunity and the
+   row overflowed a 320px viewport. Flex gives it wrap points, and the gap
+   replaces the per-link margins so spacing stays even on every row. */
+footer.foot p:last-child{
+  display:flex; flex-wrap:wrap; justify-content:center;
+  gap:2px 4px;
+}
+footer.foot p:last-child a{
+  margin:0;
+  min-height:44px; display:inline-flex; align-items:center;
+  padding:0 10px;
+}
+
+/* Same iOS zoom-on-focus guard for the carried-over content pages. */
+@media (pointer:coarse){
+  input, select, textarea{ font-size:16px; }
+}

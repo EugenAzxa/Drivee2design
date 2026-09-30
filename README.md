@@ -56,6 +56,7 @@ assets/js/planet.js         the Three.js particle planet (ES module)
 assets/js/scanner.js        scan → verdict → firm match → lead
 assets/js/lawyers.js        firm directory + licence-aware matching
 tools/test-tickets.js       run real ticket photos through the live scanner
+assets/js/install.js        home-screen install (real prompt / iOS sheet)
 assets/js/main.js           nav, scroll reveal, count-ups, PWA registration
 
 api/                    Vercel serverless functions
@@ -135,6 +136,22 @@ advice:
 * **Camera ≠ officer.** A red light *camera* ticket carries no demerit points
   and never reaches your record; an officer-issued one carries three. The
   scanner is told to distinguish them.
+
+## Install, not app stores
+
+Drivee is a PWA — there is no App Store or Play listing, and the store links
+already in app.html belong to Green P, a third-party app Drivee links out to.
+The hero badges therefore do what store badges promise instead of pointing at
+something that does not exist:
+
+* **Android / Chromium** — the real `beforeinstallprompt` flow. The badge
+  relabels itself to "Install in one tap" once the browser offers it.
+* **iOS** — a sheet with the Share → Add to Home Screen steps, because Apple
+  allows install only from Safari.
+* **Already installed** — the row hides itself.
+
+If a real store listing ever ships, swap the click handlers in
+`assets/js/install.js` for the store URLs and delete the rest.
 
 ## Numbers and honesty
 

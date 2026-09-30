@@ -110,3 +110,8 @@ select option{ background:#120E22; color:#F2F0FA; }
 
 /* inline links & "see all" affordances still carrying the solid brand blue */
 a[href^="mailto:"], .see-all, .live, .link, .dv2-link{ color:#9DBAFF; }
+
+/* Same iOS zoom-on-focus guard inside the app. */
+@media (pointer:coarse){
+  input, select, textarea{ font-size:16px; }
+}

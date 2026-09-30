@@ -150,18 +150,47 @@
         <h1>Got a ticket?<br><span class="grad">Find out what it really costs.</span></h1>
 
         <p class="lede hero-sub">
-          Upload the photo. Drivee reads the charge, the deadline and the amount, works out what
-          it truly costs you once demerit points and insurance are counted, then puts you in
-          front of the licensed Ontario paralegals and lawyers who can actually take it.
+          <span class="sub-short">Upload the photo. Drivee tells you what the ticket really costs you —
+          fine, points and insurance — and who can fight it.</span>
+          <span class="sub-full">Upload the photo. Drivee reads the charge, the deadline and the amount,
+          works out what it truly costs you once demerit points and insurance are counted,
+          then puts you in front of the licensed Ontario paralegals and lawyers who can
+          actually take it.</span>
         </p>
       </div>
 
       <div class="hero-bottom">
+        <!-- Drivee is a PWA, so these install it rather than linking to a
+             store listing that does not exist. See assets/js/install.js. -->
+        <div class="install-row" id="install-row">
+          <button class="ibadge" type="button" data-install="primary">
+            <svg class="ib-ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M3 20.5V3.5c0-.6.3-1.1.8-1.4l10 8.4-10 10.6a1.6 1.6 0 0 1-.8-1.4zM16.2 13.6 5.9 21.9l9.2-5.3zM19.9 10.7c.6.4.6 1.3 0 1.7l-2.4 1.4-2.6-2.2 2.6-2.2zM5.9 2.1l10.3 8.3-1.1.9z"/>
+            </svg>
+            <span class="ib-tx">
+              <span class="ib-sub">Add to home screen</span>
+              <span class="ib-main">Android &amp; Chrome</span>
+            </span>
+          </button>
+
+          <button class="ibadge" type="button" data-install="ios">
+            <svg class="ib-ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M16.4 12.7c0-2.2 1.8-3.3 1.9-3.4-1-1.5-2.6-1.7-3.2-1.7-1.4-.1-2.7.8-3.3.8-.7 0-1.7-.8-2.8-.8-1.5 0-2.8.8-3.5 2.1-1.5 2.6-.4 6.5 1.1 8.6.7 1 1.6 2.2 2.7 2.2 1.1 0 1.5-.7 2.8-.7s1.7.7 2.8.7c1.2 0 1.9-1 2.6-2.1.8-1.2 1.2-2.4 1.2-2.4s-2.3-.9-2.3-3.3zM14.2 5.9c.6-.7 1-1.7.9-2.7-.9 0-2 .6-2.6 1.3-.6.6-1.1 1.7-.9 2.6 1 .1 2-.5 2.6-1.2z"/>
+            </svg>
+            <span class="ib-tx">
+              <span class="ib-sub">Add to home screen</span>
+              <span class="ib-main">iPhone &amp; iPad</span>
+            </span>
+          </button>
+        </div>
+        <p class="install-note">Installs straight from the browser — no store, no download, works offline.</p>
+
         <div class="hero-badges">
           <span class="pill">No signup</span>
           <span class="pill">Free verdict</span>
           <span class="pill">No commission</span>
         </div>
+
 
         <div class="hero-proof">
           <div class="hero-proof-i">
@@ -625,6 +654,7 @@
 <script src="/assets/js/lawyers.js"></script>
 <script src="/assets/js/main.js" defer></script>
 <script src="/assets/js/scanner.js" defer></script>
+<script src="/assets/js/install.js" defer></script>
 <script type="module" src="/assets/js/planet.js"></script>
 </body>
 </html>
