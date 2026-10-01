@@ -1,6 +1,10 @@
 var ALLOWED_MODELS = [
-  'claude-haiku-4-5-20251001',
-  'claude-sonnet-4-6'
+  // Current lineup. claude-sonnet-4-6 is legacy; Haiku 4.5 is still current
+  // and stays because the in-app scanner uses it for cheap, fast reads.
+  'claude-opus-5-5',
+  'claude-sonnet-5-5',
+  'claude-haiku-4-5',
+  'claude-haiku-4-5-20251001'
 ];
 var MAX_TOKENS_LIMIT = 500;
 var ALLOWED_ORIGINS = [

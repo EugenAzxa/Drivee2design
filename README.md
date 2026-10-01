@@ -19,7 +19,7 @@ Every feature of the original Drivee is carried over.
 ```
 Google  →  /  →  drop ticket photo  →  /api/scan-ticket
                         ↓
-     charge · deadline · demerit points, read by claude-opus-5
+     charge · deadline · demerit points, read by claude-opus-5-5
      into a guaranteed JSON schema (low-confidence reads say so)
                         ↓
      what it ACTUALLY costs: fine + insurance over 3 years
@@ -66,7 +66,7 @@ api/                    Vercel serverless functions
 
 | Endpoint | Purpose |
 |---|---|
-| `POST /api/scan-ticket` | Reads a ticket photo → schema-valid JSON (claude-opus-5) |
+| `POST /api/scan-ticket` | Reads a ticket photo → schema-valid JSON (claude-opus-5-5) |
 | `POST /api/claude`  | Generic Claude proxy, still used by the app |
 | `POST /api/lead`    | Case-review request → chosen firm, driver copied |
 | `POST /api/contact` | Contact form |

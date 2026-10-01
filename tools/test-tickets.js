@@ -27,6 +27,7 @@ for (const f of ['.env.local', '.env']) {
 }
 
 const handler = require('../api/scan-ticket.js');
+const { MODEL } = handler;
 
 const MEDIA = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp' };
 
@@ -58,7 +59,7 @@ function pad(s, n) { return String(s == null ? '—' : s).padEnd(n); }
     process.exit(1);
   }
 
-  console.log('\n  Scanning ' + files.length + ' ticket(s) with claude-opus-5\n');
+  console.log('\n  Scanning ' + files.length + ' ticket(s) with ' + MODEL + '\n');
 
   let pass = 0, fail = 0, checked = 0;
 

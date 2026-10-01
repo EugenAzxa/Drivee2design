@@ -122,7 +122,7 @@ officer-issued one carries 3. The old code gave both 3.
 ```
 index.html              the landing page — hero dropzone, funnel, SEO
 app.html                the full PWA, carried over from the old repo
-api/scan-ticket.js      ticket photo → schema-valid JSON (claude-opus-5)
+api/scan-ticket.js      ticket photo → schema-valid JSON (claude-opus-5-5)
 api/lead.js             case-review request → the chosen firm
 assets/js/ontario.js    Ontario rules: APS vs POA, points, costs
 assets/js/lawyers.js    firm directory + licence-aware matching

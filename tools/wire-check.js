@@ -4,7 +4,7 @@
 // echo server, so it needs no API key and spends nothing.
 const http = require('http');
 const Anthropic = require('@anthropic-ai/sdk');
-const { TICKET_SCHEMA, SYSTEM } = require('../api/scan-ticket.js');
+const { TICKET_SCHEMA, SYSTEM, MODEL } = require('../api/scan-ticket.js');
 
 const server = http.createServer((req, res) => {
   let body = '';
@@ -67,7 +67,7 @@ server.listen(0, async () => {
 
   try {
     const r = await client.messages.create({
-      model: 'claude-opus-5',
+      model: MODEL,
       max_tokens: 8000,
       system: SYSTEM,
       thinking: { type: 'adaptive' },

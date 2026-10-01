@@ -14,6 +14,10 @@
 
 const Anthropic = require('@anthropic-ai/sdk');
 
+// One source of truth for the model — tools/wire-check.js imports this so
+// a migration can never leave the test asserting against the old model.
+const MODEL = 'claude-opus-5-5';
+
 const ALLOWED_ORIGINS = [
   'https://drivee.ca',
   'https://www.drivee.ca',
@@ -125,7 +129,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const response = await client.messages.create({
-      model: 'claude-opus-5',
+      model: MODEL,
       max_tokens: 8000,
       system: SYSTEM,
       thinking: { type: 'adaptive' },
@@ -208,5 +212,6 @@ module.exports = async function handler(req, res) {
 };
 
 // exported for the local test harness
+module.exports.MODEL = MODEL;
 module.exports.TICKET_SCHEMA = TICKET_SCHEMA;
 module.exports.SYSTEM = SYSTEM;
