@@ -1,10 +1,12 @@
-// Lawyer lead endpoint — forwards a scanned ticket to the defence firm the
-// driver picked, copies the driver, and blind-copies Drivee.
+// Case-review lead endpoint. The lead comes to Drivee first — the ops inbox
+// gets the full request and a Telegram ping — and Drivee connects the driver
+// with the firm they picked. The driver gets a receipt of exactly what was sent.
 //
 // POST { name, email, phone, note, firmName, firmEmail, ticket } -> { ok: true }
 //
-// SECURITY: firmEmail is never trusted from the client. It is looked up in
-// the allowlist below, so this endpoint can never be driven as an open relay.
+// SECURITY: the preferred firm is only ever resolved against the allowlist
+// below, and nothing is mailed to an address the client supplies other than
+// the driver's own receipt.
 
 var FIRMS = {
   'info@xcopper.com':                  'X-Copper Professional Corp',
@@ -14,13 +16,17 @@ var FIRMS = {
   'info@hwy-law.com':                  'HWY-LAW Criminal Defence'
 };
 
-var OPS_INBOX = 'drivee.canada@gmail.com';
+var OPS_INBOX = process.env.LEAD_INBOX || 'drivee.canada@gmail.com';
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'POST only' });
 
   var RESEND = process.env.RESEND_API_KEY;
-  if (!RESEND) return res.status(500).json({ ok: false, error: 'Mail not configured' });
+  var TG_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+  var TG_CHAT = process.env.TELEGRAM_CHAT_ID;
+  if (!RESEND && !(TG_TOKEN && TG_CHAT)) {
+    return res.status(500).json({ ok: false, error: 'Lead delivery not configured' });
+  }
 
   var b = req.body || {};
 
@@ -51,6 +57,7 @@ module.exports = async function handler(req, res) {
       '<b>Name:</b> ' + esc(name) + '<br/>' +
       '<b>Email:</b> ' + esc(email) + '<br/>' +
       (phone ? '<b>Phone:</b> ' + esc(phone) + '<br/>' : '') +
+      '<b>Preferred firm:</b> ' + esc(firmName) + '<br/>' +
     '</p>' +
     '<p style="background:#F4F6FB;border-radius:10px;padding:12px 14px;' +
       'font-family:ui-monospace,Menlo,monospace;font-size:13px;color:#0B1430">' +
@@ -69,52 +76,83 @@ module.exports = async function handler(req, res) {
     '</div>';
   }
 
-  async function send(payload) {
+  function send(payload) {
     return fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + RESEND },
       body: JSON.stringify(payload)
+    }).then(function (r) {
+      if (!(r.status >= 200 && r.status < 300)) throw new Error('resend ' + r.status);
+      return true;
     });
   }
 
-  try {
-    // 1. the firm — this is the lead
-    var r = await send({
-      from: 'Drivee Referrals <reminders@drivee.ca>',
-      to: [firmEmail],
-      bcc: [OPS_INBOX],
+  function telegram() {
+    var text = [
+      '🎯 New case review lead',
+      '👤 ' + name,
+      '✉️ ' + email,
+      phone ? '📞 ' + phone : null,
+      '⚖️ Wants: ' + firmName,
+      '🎫 ' + ticket,
+      note ? '📝 ' + note.slice(0, 500) : null
+    ].filter(Boolean).join('\n');
+    return fetch('https://api.telegram.org/bot' + TG_TOKEN + '/sendMessage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: TG_CHAT, text: text })
+    }).then(function (r) {
+      if (!r.ok) throw new Error('telegram ' + r.status);
+      return true;
+    });
+  }
+
+  // The lead reaches Drivee by email and Telegram. Either one landing is
+  // enough — a lead lost to one flaky provider is a driver nobody calls back.
+  var channels = [];
+  if (RESEND) {
+    channels.push(send({
+      from: 'Drivee Leads <reminders@drivee.ca>',
+      to: [OPS_INBOX],
       reply_to: email,
-      subject: 'Free case review request via Drivee — ' + name,
+      subject: 'Case review lead — ' + name + ' → ' + firmName,
       html: shell(
         'New case review request',
-        'Sent from drivee.ca — the driver chose your firm from a matched shortlist.',
+        'From drivee.ca. Connect the driver with their preferred firm within one business day.',
         rows,
-        'Referral code DRIVEE · no commission is charged. Reply directly to reach the driver.'
+        'Reply to this email to reach the driver directly.'
       )
-    });
+    }));
+  }
+  if (TG_TOKEN && TG_CHAT) channels.push(telegram());
 
-    if (!(r.status >= 200 && r.status < 300)) {
-      console.log('[lead] resend status', r.status);
-      return res.status(502).json({ ok: false, error: 'Mail service error' });
-    }
+  var results = await Promise.allSettled(channels);
+  var delivered = results.some(function (r) { return r.status === 'fulfilled'; });
+  results.forEach(function (r) {
+    if (r.status === 'rejected') console.log('[lead] channel failed', r.reason && r.reason.message);
+  });
 
-    // 2. the driver — their copy/receipt. Best-effort; never fails the request.
-    send({
+  if (!delivered) {
+    return res.status(502).json({ ok: false, error: 'Send failed' });
+  }
+
+  // The driver's receipt. Best-effort; never fails the request. Awaited, since
+  // a serverless function can be frozen as soon as the response is sent.
+  if (RESEND) {
+    await send({
       from: 'Drivee <reminders@drivee.ca>',
       to: [email],
-      subject: 'Your case review request to ' + firmName,
+      reply_to: OPS_INBOX,
+      subject: 'We got your case review request',
       html: shell(
-        'Request sent to ' + esc(firmName),
-        'They usually reply within one business day.',
+        'Request received',
+        'We’ll connect you with ' + esc(firmName) + ' for a free case review, usually within one business day.',
         rows,
-        'This is exactly what we shared — nothing else, and with no other firm. ' +
-        'Drivee is not a law firm and takes no commission. Questions: ' + OPS_INBOX
+        'This is exactly what you sent us. We share it with ' + esc(firmName) + ' and nobody else. ' +
+        'Drivee is not a law firm and takes no commission. Questions: reply to this email.'
       )
     }).catch(function () {});
-
-    return res.status(200).json({ ok: true });
-  } catch (e) {
-    console.log('[lead] error', e && e.message);
-    return res.status(500).json({ ok: false, error: 'Send failed — try emailing the firm directly.' });
   }
+
+  return res.status(200).json({ ok: true });
 };

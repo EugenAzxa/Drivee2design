@@ -136,6 +136,32 @@ h1.article-title {
 }
 .warn strong { color: #F5BB63; }
 
+/* Ticket-scanner card — the bridge from a guide into the funnel */
+.scan-cta {
+  display: flex; align-items: center; gap: 18px;
+  background: rgba(232, 155, 34, 0.08);
+  border: 1px solid rgba(232, 155, 34, 0.35);
+  border-radius: 16px;
+  padding: 20px 22px;
+  margin: 28px 0;
+}
+.scan-cta .scan-cta-ic { font-size: 28px; line-height: 1; flex: none; }
+.scan-cta .scan-cta-txt { flex: 1; min-width: 0; }
+.scan-cta h3 { font-size: 17px; font-weight: 700; color: var(--ink); margin: 0 0 4px; }
+.scan-cta p { font-size: 14px; line-height: 1.5; color: var(--ink2); margin: 0; }
+.scan-cta a.scan-cta-btn {
+  flex: none;
+  background: var(--amber); color: #1A1206;
+  padding: 12px 20px; border-radius: 999px;
+  font-weight: 700; font-size: 15px; white-space: nowrap;
+}
+.scan-cta a.scan-cta-btn:hover { filter: brightness(1.08); text-decoration: none; }
+@media (max-width: 600px) {
+  .scan-cta { flex-direction: column; align-items: stretch; text-align: left; }
+  .scan-cta .scan-cta-ic { display: none; }
+  .scan-cta a.scan-cta-btn { text-align: center; }
+}
+
 /* Inline CTA card */
 .app-cta {
   background: var(--ink-fill, var(--ink));

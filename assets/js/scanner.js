@@ -280,7 +280,7 @@
             '<div>' +
               '<h4 class="block-h">' + firms.length + ' ' +
                 (firms.length === 1 ? 'firm' : 'firms') + ' can take this charge</h4>' +
-              '<p class="cta-sub">Free case review, no commission. We pass your ticket to the one firm you pick and nobody else.</p>' +
+              '<p class="cta-sub">Free case review, no commission. Pick a firm and we connect you. Your ticket goes to that firm and nobody else.</p>' +
             '</div>' +
             '<button class="btn btn-amber btn-lg" type="button" data-firms>See who can help →</button>' +
           '</div>' +
@@ -449,7 +449,7 @@
             '</button>';
           }).join('') +
         '</div>' +
-        '<p class="trust">🔒 Free consultation. We forward your details to the firm you choose — never to anyone else. ' +
+        '<p class="trust">🔒 Free consultation. We connect you with the firm you choose and share your details with them only. ' +
         'Drivee is not a law firm and takes no commission.</p>' +
       '</div>'
     );
@@ -498,7 +498,7 @@
 
         '<button class="btn btn-amber btn-lg btn-block mt-24" type="button" data-pick>Continue → free case review</button>' +
         '<p class="trust">Quoted lines are the firm’s own public claims, not Drivee’s assessment. ' +
-        'We forward your info to this firm only.</p>' +
+        'We share your info with this firm only.</p>' +
       '</div>'
     );
     $('[data-back]', stage).addEventListener('click', function () { renderFirms(); });
@@ -545,8 +545,8 @@
           '<input type="text" name="company" class="sr-only" tabindex="-1" autocomplete="off" aria-hidden="true">' +
           '<button class="btn btn-amber btn-lg btn-block" type="submit">Request my free review</button>' +
           '<p class="lead-err" hidden></p>' +
-          '<p class="trust">By sending this you agree we may pass your ticket details to ' + esc(f.name) +
-          '. Drivee is not a law firm, gives no legal advice, and takes no commission.</p>' +
+          '<p class="trust">By sending this you agree Drivee may share your ticket details with ' + esc(f.name) +
+          ' to set up your review. Drivee is not a law firm, gives no legal advice, and takes no commission.</p>' +
         '</form>' +
       '</div>'
     );
@@ -598,7 +598,8 @@
         btn.textContent = 'Request my free review';
         err.hidden = false;
         err.innerHTML = esc(e.message || 'Could not send') +
-          ' — you can email them directly at <a href="mailto:' + esc(firm.email) + '">' + esc(firm.email) + '</a>.';
+          ' — email us at <a href="mailto:drivee.canada@gmail.com">drivee.canada@gmail.com</a>' +
+          ' or contact ' + esc(firm.name) + ' directly at <a href="mailto:' + esc(firm.email) + '">' + esc(firm.email) + '</a>.';
       });
   }
 
@@ -606,8 +607,8 @@
     show(
       '<div class="card card-pad center scan-done">' +
         '<div class="done-ic">✓</div>' +
-        '<h3>Sent to ' + esc(firm.name) + '</h3>' +
-        '<p class="lede mt-16">They typically reply within one business day. We copied you on the email so you have a record of exactly what was shared.</p>' +
+        '<h3>Request received</h3>' +
+        '<p class="lede mt-16">We’ll connect you with ' + esc(firm.name) + ' for your free case review, usually within one business day. We emailed you a copy of exactly what you sent.</p>' +
         '<div class="done-next mt-32">' +
           '<a class="btn btn-ghost" href="/app.html">Track this ticket in the app</a>' +
           '<a class="btn btn-ghost" href="/blog/how-to-dispute-parking-ticket-toronto.html">How disputes work →</a>' +
