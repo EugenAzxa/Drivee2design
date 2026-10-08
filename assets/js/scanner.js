@@ -102,14 +102,17 @@
     }, 3500);
   }
 
-  function showError(msg) {
+  function showError(msg, serverSide) {
     if (stage._tick) clearInterval(stage._tick);
     show(
       '<div class="scan-card card card-pad scan-err">' +
         '<div class="scan-err-ic">!</div>' +
-        '<h3>' + esc(msg) + '</h3>' +
-        '<p class="lede">Try a straight-on photo in good light with all four corners of the ticket visible.</p>' +
-        '<button class="btn btn-ghost mt-16" type="button" data-retry>Try another photo</button>' +
+        '<h3>' + (serverSide ? 'Our scanner is having a problem' : esc(msg)) + '</h3>' +
+        (serverSide
+          ? '<p class="lede">It’s on our side, not your photo. Try again in a few minutes, or email it to ' +
+            '<a href="mailto:drivee.canada@gmail.com">drivee.canada@gmail.com</a> and we’ll read it for you.</p>'
+          : '<p class="lede">Try a straight-on photo in good light with all four corners of the ticket visible.</p>') +
+        '<button class="btn btn-ghost mt-16" type="button" data-retry>' + (serverSide ? 'Try again' : 'Try another photo') + '</button>' +
       '</div>'
     );
     $('[data-retry]', stage).addEventListener('click', function () {
@@ -654,10 +657,16 @@
     })
       .then(function (r) {
         if (timer) clearTimeout(timer);
-        return r.json().catch(function () { throw new Error('Server error (' + r.status + ')'); });
+        return r.json()
+          .then(function (j) { j._status = r.status; return j; })
+          .catch(function () { throw new Error('Server error (' + r.status + ')'); });
       })
       .then(function (res) {
-        if (!res.ok) { showError(res.error || 'No ticket detected — try a clearer photo'); return; }
+        if (!res.ok) {
+          // A 5xx is our fault, not the photo's — don't send them off to retake it.
+          showError(res.error || 'No ticket detected — try a clearer photo', res._status >= 500);
+          return;
+        }
         if (res.outOfProvince) { renderOutOfProvince(res.ticket, res.jurisdiction); return; }
         renderVerdict(res.ticket);
       })
