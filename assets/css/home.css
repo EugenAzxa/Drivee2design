@@ -694,3 +694,41 @@
 @media (pointer:coarse){
   .fld input, .fld textarea{ font-size:16px; }
 }
+
+/* ── partner firm + account gate ─────────────────────────────────── */
+.partner-card{
+  padding:20px 20px 18px; border-radius:var(--r);
+  background:linear-gradient(180deg, var(--amber-dim), transparent 70%), var(--void-2);
+  border:1px solid rgba(232,155,34,.45);
+}
+.partner-top{ display:flex; align-items:center; gap:12px; }
+.partner-badge{
+  font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+  color:#1A1206; background:var(--amber); padding:4px 9px; border-radius:999px;
+}
+.partner-name{ font-size:20px; font-weight:800; letter-spacing:-.02em; margin-top:12px; }
+.partner-contact{ display:flex; flex-wrap:wrap; gap:8px 18px; margin-top:12px; font-size:14px; }
+.partner-contact a{ color:var(--ink); font-weight:600; text-decoration:none; border-bottom:1px solid var(--line-2); }
+.partner-contact a:hover{ border-color:var(--amber); }
+.partner-note{ font-size:12.5px; color:var(--ink-3); margin-top:10px; text-align:center; }
+
+.locked{ margin-top:14px; }
+.locked-rows{ display:flex; flex-direction:column; gap:10px; filter:blur(3px); opacity:.55; pointer-events:none; user-select:none; }
+.firm-ghost{ cursor:default; }
+.unlock{
+  margin-top:-34px; position:relative;
+  padding:20px; border-radius:var(--r);
+  background:var(--void-3); border:1px solid var(--line-2);
+  box-shadow:0 -24px 40px var(--void);
+}
+.unlock-row{ display:flex; gap:10px; margin-top:14px; }
+.unlock-row input{
+  flex:1; min-width:0; padding:12px 14px; border-radius:12px;
+  background:var(--void); border:1px solid var(--line-2); color:var(--ink); font:inherit; font-size:15px;
+}
+.unlock-row input:focus{ outline:none; border-color:var(--amber); }
+.unlock-row .btn{ flex:none; }
+.unlock-ok{ font-size:14px; color:var(--green); font-weight:700; margin-top:6px; }
+@media (max-width:560px){
+  .unlock-row{ flex-direction:column; }
+}

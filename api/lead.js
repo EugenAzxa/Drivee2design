@@ -1,6 +1,8 @@
-// Case-review lead endpoint. The lead comes to Drivee first — the ops inbox
-// gets the full request and a Telegram ping — and Drivee connects the driver
-// with the firm they picked. The driver gets a receipt of exactly what was sent.
+// Case-review lead endpoint.
+//  · Partner firms (DIRECT below) get the request straight in their inbox,
+//    and Drivee gets a tracking copy plus a Telegram ping.
+//  · Every other firm: the lead comes to Drivee, which connects the driver.
+// The driver always gets a receipt of exactly what was sent.
 //
 // POST { name, email, phone, note, firmName, firmEmail, ticket } -> { ok: true }
 //
@@ -9,12 +11,16 @@
 // the driver's own receipt.
 
 var FIRMS = {
+  'info@bajwalawfirm.ca':                'Bajwa Law Firm',
   'info@xcopper.com':                  'X-Copper Professional Corp',
   'info@x-cops.ca':                    'Toronto Traffic Law',
   'toronto@pointts.com':               'POINTTS Advisory Services',
   'info@ontariotraffictickets.com':    'OTT Legal',
   'info@hwy-law.com':                  'HWY-LAW Criminal Defence'
 };
+
+// Partners who have agreed to receive leads directly.
+var DIRECT = { 'info@bajwalawfirm.ca': true };
 
 var OPS_INBOX = process.env.LEAD_INBOX || 'drivee.canada@gmail.com';
 
@@ -43,6 +49,7 @@ module.exports = async function handler(req, res) {
   var firmName  = FIRMS[firmEmail];
 
   if (!firmName) return res.status(400).json({ ok: false, error: 'Unknown firm' });
+  var direct = !!DIRECT[firmEmail];
   if (!name || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
     return res.status(400).json({ ok: false, error: 'Please enter your name and a valid email.' });
   }
@@ -87,13 +94,14 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  function telegram() {
+  function telegram(status) {
     var text = [
-      '🎯 New case review lead',
+      direct ? '🎯 Lead sent to ' + firmName : '🎯 New case review lead',
+      status ? status : null,
       '👤 ' + name,
       '✉️ ' + email,
       phone ? '📞 ' + phone : null,
-      '⚖️ Wants: ' + firmName,
+      direct ? null : '⚖️ Wants: ' + firmName,
       '🎫 ' + ticket,
       note ? '📝 ' + note.slice(0, 500) : null
     ].filter(Boolean).join('\n');
@@ -107,27 +115,53 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  // The lead reaches Drivee by email and Telegram. Either one landing is
-  // enough — a lead lost to one flaky provider is a driver nobody calls back.
+  // 1. Partner firm: the request goes straight to them, reply-to the driver.
+  var firmOk = null;
+  if (direct && RESEND) {
+    firmOk = await send({
+      from: 'Drivee Referrals <reminders@drivee.ca>',
+      to: [firmEmail],
+      reply_to: email,
+      subject: 'Free case review request via Drivee — ' + name,
+      html: shell(
+        'New case review request',
+        'Sent from drivee.ca by a driver who scanned their ticket and chose to contact your firm.',
+        rows,
+        'Reply to this email to reach the driver directly.'
+      )
+    }).then(function () { return true; }, function (e) {
+      console.log('[lead] firm email failed', e && e.message);
+      return false;
+    });
+  }
+  var status = firmOk === false ? '⚠️ FIRM EMAIL FAILED — forward this lead manually' : null;
+
+  // 2. Drivee's copy, by email and Telegram. For partner leads it is the
+  // tracking record; for everyone else it is the lead itself. Either channel
+  // landing is enough — a lead lost to one flaky provider is a driver nobody
+  // calls back.
   var channels = [];
   if (RESEND) {
     channels.push(send({
       from: 'Drivee Leads <reminders@drivee.ca>',
       to: [OPS_INBOX],
       reply_to: email,
-      subject: 'Case review lead — ' + name + ' → ' + firmName,
+      subject: (status ? '⚠️ ' : '') + (direct ? 'Lead sent to ' : 'Case review lead — ') +
+        (direct ? firmName + ' — ' + name : name + ' → ' + firmName),
       html: shell(
-        'New case review request',
-        'From drivee.ca. Connect the driver with their preferred firm within one business day.',
+        direct ? 'Lead sent to ' + esc(firmName) : 'New case review request',
+        status ? status
+          : direct ? 'Delivered to ' + esc(firmEmail) + '. This copy is for tracking.'
+          : 'From drivee.ca. Connect the driver with their preferred firm within one business day.',
         rows,
         'Reply to this email to reach the driver directly.'
       )
     }));
   }
-  if (TG_TOKEN && TG_CHAT) channels.push(telegram());
+  if (TG_TOKEN && TG_CHAT) channels.push(telegram(status));
 
   var results = await Promise.allSettled(channels);
-  var delivered = results.some(function (r) { return r.status === 'fulfilled'; });
+  var delivered = firmOk === true || results.some(function (r) { return r.status === 'fulfilled'; });
   results.forEach(function (r) {
     if (r.status === 'rejected') console.log('[lead] channel failed', r.reason && r.reason.message);
   });
@@ -143,10 +177,11 @@ module.exports = async function handler(req, res) {
       from: 'Drivee <reminders@drivee.ca>',
       to: [email],
       reply_to: OPS_INBOX,
-      subject: 'We got your case review request',
+      subject: direct ? 'Your request was sent to ' + firmName : 'We got your case review request',
       html: shell(
-        'Request received',
-        'We’ll connect you with ' + esc(firmName) + ' for a free case review, usually within one business day.',
+        direct ? 'Sent to ' + esc(firmName) : 'Request received',
+        direct ? esc(firmName) + ' will reply to you directly. Here’s a copy of what we sent them.'
+          : 'We’ll connect you with ' + esc(firmName) + ' for a free case review, usually within one business day.',
         rows,
         'This is exactly what you sent us. We share it with ' + esc(firmName) + ' and nobody else. ' +
         'Drivee is not a law firm and takes no commission. Questions: reply to this email.'

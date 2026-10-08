@@ -201,7 +201,8 @@
     var regime  = ON.parkingRegime(t.municipality);
     var parking = ON.isParking(t.doc_type);
     var firms   = window.driveeMatchFirms(t.doc_type);
-    var cost    = ON.costPicture({ type: t.doc_type, amount: t.amount }, firms[0] && firms[0].from);
+    var priced  = window.driveeCheapestPriced(firms);
+    var cost    = ON.costPicture({ type: t.doc_type, amount: t.amount }, priced && priced.from);
     state.firms = firms;
     state.cost  = cost;
 
@@ -247,7 +248,7 @@
     }
 
     /* the pricing picture */
-    var costHtml = renderCostBlock(cost, o, firms[0]);
+    var costHtml = renderCostBlock(cost, o, priced);
 
     show(
       '<div class="verdict card" data-tone="' + v.tone + '">' +
@@ -281,9 +282,8 @@
 
           '<div class="cta-band">' +
             '<div>' +
-              '<h4 class="block-h">' + firms.length + ' ' +
-                (firms.length === 1 ? 'firm' : 'firms') + ' can take this charge</h4>' +
-              '<p class="cta-sub">Free case review, no commission. Pick a firm and we connect you. Your ticket goes to that firm and nobody else.</p>' +
+              '<h4 class="block-h">Talk to a lawyer about this ticket</h4>' +
+              '<p class="cta-sub">Free case review. Contact a Drivee partner lawyer in one tap, or compare all ' + firms.length + ' matched firms.</p>' +
             '</div>' +
             '<button class="btn btn-amber btn-lg" type="button" data-firms>See who can help →</button>' +
           '</div>' +
@@ -409,51 +409,118 @@
     );
   }
 
-  /* ── matched firms, with pricing ───────────────────────────────── */
-  function renderFirms() {
+  /* ── matched firms ─────────────────────────────────────────────────
+     The partner firm is open to everyone, contact details and all.
+     The rest of the matched list unlocks with a free account. */
+  function licenceLabel(f) {
+    return f.licence === 'lawyers+paralegals' ? 'Lawyers + paralegals'
+      : f.licence === 'lawyers' ? 'Lawyers' : 'Licensed paralegals';
+  }
+  function priceLabel(f) {
+    return f.from ? 'from ' + money0(f.from) : 'Free consultation';
+  }
+
+  function firmRow(f, i) {
+    return '<button class="firm" type="button" data-firm="' + i + '">' +
+      '<div class="firm-top">' +
+        '<span class="firm-name">' + esc(f.name) + '</span>' +
+        '<span class="firm-from mono">' + priceLabel(f) + '</span>' +
+        '<span class="firm-arrow">›</span>' +
+      '</div>' +
+      '<div class="firm-claim">' + esc(f.claim) + '</div>' +
+      '<div class="firm-perks">' +
+        '<span class="firm-perk firm-licence">' + licenceLabel(f) + '</span>' +
+        '<span class="firm-perk">' + esc(f.coverage) + '</span>' +
+        f.perks.slice(0, 2).map(function (p) {
+          return '<span class="firm-perk">' + esc(p) + '</span>';
+        }).join('') +
+      '</div>' +
+    '</button>';
+  }
+
+  function partnerCard(f, i) {
+    return '<div class="partner-card">' +
+      '<div class="partner-top">' +
+        '<span class="partner-badge">Drivee partner</span>' +
+        '<span class="firm-from mono">' + priceLabel(f) + '</span>' +
+      '</div>' +
+      '<h4 class="partner-name">' + esc(f.name) + '</h4>' +
+      '<div class="firm-claim">' + esc(f.team) + '</div>' +
+      '<div class="partner-contact">' +
+        '<a href="mailto:' + esc(f.email) + '" data-contact="email">✉ ' + esc(f.email) + '</a>' +
+        (f.phone ? '<a href="tel:' + esc(f.phone.replace(/[^\d+]/g, '')) + '" data-contact="phone">☎ ' + esc(f.phone) + '</a>' : '') +
+        (f.website ? '<a href="' + esc(f.website) + '" target="_blank" rel="noopener" data-contact="web">↗ ' +
+          esc(f.website.replace(/^https?:\/\/|\/$/g, '')) + '</a>' : '') +
+      '</div>' +
+      '<div class="firm-perks">' +
+        '<span class="firm-perk firm-licence">' + licenceLabel(f) + '</span>' +
+        '<span class="firm-perk">' + esc(f.coverage) + '</span>' +
+        f.perks.slice(0, 2).map(function (p) { return '<span class="firm-perk">' + esc(p) + '</span>'; }).join('') +
+      '</div>' +
+      '<button class="btn btn-amber btn-lg btn-block mt-16" type="button" data-contact-firm="' + i + '">Contact this lawyer — free</button>' +
+      '<p class="partner-note">We send your ticket summary to ' + esc(f.name) + ' from here, and email you a copy.</p>' +
+    '</div>';
+  }
+
+  function lockedList(others) {
+    return '<div class="locked">' +
+      '<div class="locked-rows" aria-hidden="true">' +
+        others.slice(0, 3).map(function (f) {
+          return '<div class="firm firm-ghost"><div class="firm-top">' +
+            '<span class="firm-name">██████ ████ ███</span>' +
+            '<span class="firm-from mono">' + priceLabel(f) + '</span></div>' +
+            '<div class="firm-perks"><span class="firm-perk firm-licence">' + licenceLabel(f) + '</span></div></div>';
+        }).join('') +
+      '</div>' +
+      '<form class="unlock" novalidate>' +
+        '<h4 class="block-h">See all ' + others.length + ' more ' + (others.length === 1 ? 'firm' : 'firms') + ' for this charge</h4>' +
+        '<p class="cta-sub">Create a free Drivee account — just your email. Compare prices and pick the firm that suits you.</p>' +
+        '<div class="unlock-row">' +
+          '<input name="email" type="email" autocomplete="email" required placeholder="you@example.com" aria-label="Email">' +
+          '<button class="btn btn-amber" type="submit">Create free account</button>' +
+        '</div>' +
+        '<p class="lead-err" hidden></p>' +
+        '<p class="trust">No password. We email you a sign-in link — the same account works in the Drivee app.</p>' +
+      '</form>' +
+    '</div>';
+  }
+
+  function renderFirms(justJoined) {
     var firms = state.firms;
     var t = state.ticket;
     var o = ON.offence(t.doc_type);
     var needsLawyer = window.DRIVEE_CRIMINAL.indexOf(String(t.doc_type)) !== -1;
+    var member = !!(window.DriveeAccount && window.DriveeAccount.isMember());
+
+    var partnerIdx = -1;
+    firms.forEach(function (f, i) { if (partnerIdx < 0 && f.featured) partnerIdx = i; });
+    var others = firms.map(function (f, i) { return { f: f, i: i }; })
+      .filter(function (x) { return x.i !== partnerIdx; });
 
     show(
       '<div class="card card-pad">' +
         '<button class="lv-back" type="button" data-back>‹ Back to verdict</button>' +
-        '<div class="eyebrow eyebrow-amber mt-16">Matched to your charge</div>' +
-        '<h3 class="mt-16">' + (needsLawyer ? 'Firms with lawyers — free case review' : 'Pick a representative — free case review') + '</h3>' +
-        '<p class="firms-intro">Showing firms that handle <strong>' + esc(o.label.toLowerCase()) + '</strong>' +
-          (t.municipality ? ' and cover ' + esc(t.municipality) : '') + ', cheapest first.' +
-          (needsLawyer ? ' Paralegals cannot represent on Criminal Code charges, so only firms with lawyers are listed.' : '') +
-        '</p>' +
+        '<div class="eyebrow eyebrow-amber mt-16">Who can help</div>' +
+        '<h3 class="mt-16">' + (needsLawyer ? 'Lawyers for this charge — free case review' : 'Get a free case review') + '</h3>' +
+        (needsLawyer ? '<p class="firms-intro">Paralegals cannot represent on Criminal Code charges, so only firms with lawyers are listed.</p>' : '') +
 
         (o.repCost && o.repCost[0]
-          ? '<div class="price-hint">Typical cost for this charge in Ontario: <strong>' +
+          ? '<div class="price-hint">Typical cost for ' + esc(o.label.toLowerCase()) + ' in Ontario: <strong>' +
              money0(o.repCost[0]) + '–' + money0(o.repCost[1]) + '</strong> <span class="tag-est">estimate</span></div>'
           : '') +
 
-        '<div class="firm-list mt-24">' +
-          firms.map(function (f, i) {
-            return '<button class="firm" type="button" data-firm="' + i + '">' +
-              '<div class="firm-top">' +
-                '<span class="firm-name">' + esc(f.name) + '</span>' +
-                '<span class="firm-from mono">from ' + money0(f.from) + '</span>' +
-                '<span class="firm-arrow">›</span>' +
-              '</div>' +
-              '<div class="firm-claim">' + esc(f.claim) + '</div>' +
-              '<div class="firm-perks">' +
-                '<span class="firm-perk firm-licence">' +
-                  (f.licence === 'lawyers+paralegals' ? 'Lawyers + paralegals' : 'Licensed paralegals') +
-                '</span>' +
-                '<span class="firm-perk">' + esc(f.coverage) + '</span>' +
-                f.perks.slice(0, 2).map(function (p) {
-                  return '<span class="firm-perk">' + esc(p) + '</span>';
-                }).join('') +
-              '</div>' +
-            '</button>';
-          }).join('') +
-        '</div>' +
-        '<p class="trust">🔒 Free consultation. We connect you with the firm you choose and share your details with them only. ' +
-        'Drivee is not a law firm and takes no commission.</p>' +
+        (partnerIdx >= 0 ? '<div class="mt-24">' + partnerCard(firms[partnerIdx], partnerIdx) + '</div>' : '') +
+
+        (others.length
+          ? '<h4 class="block-h mt-32">More firms for ' + esc(o.label.toLowerCase()) + '</h4>' +
+            (justJoined ? '<p class="unlock-ok">✓ Account created. Check your inbox for the sign-in link.</p>' : '') +
+            (member
+              ? '<div class="firm-list mt-16">' + others.map(function (x) { return firmRow(x.f, x.i); }).join('') + '</div>'
+              : lockedList(others.map(function (x) { return x.f; })))
+          : '') +
+
+        '<p class="trust">🔒 Free consultation. Your details go only to the firm you contact. ' +
+        'Drivee is not a law firm and does not give legal advice.</p>' +
       '</div>'
     );
 
@@ -461,7 +528,33 @@
     stage.querySelectorAll('[data-firm]').forEach(function (el) {
       el.addEventListener('click', function () { renderFirmDetail(+el.getAttribute('data-firm')); });
     });
-    track('firms_shown', String(firms.length) + ':' + t.doc_type);
+    stage.querySelectorAll('[data-contact-firm]').forEach(function (el) {
+      el.addEventListener('click', function () { renderLeadForm(+el.getAttribute('data-contact-firm')); });
+    });
+    stage.querySelectorAll('[data-contact]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        track('partner_contact_' + el.getAttribute('data-contact'), firms[partnerIdx] && firms[partnerIdx].id);
+      });
+    });
+
+    var unlock = $('.unlock', stage);
+    if (unlock) {
+      unlock.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var btn = unlock.querySelector('button');
+        var err = $('.lead-err', unlock);
+        btn.disabled = true; btn.textContent = 'Creating…'; err.hidden = true;
+        window.DriveeAccount.register(unlock.email.value).then(function () {
+          track('magic_link_sent', 'firms-unlock');
+          renderFirms(true);
+        }).catch(function (x) {
+          btn.disabled = false; btn.textContent = 'Create free account';
+          err.hidden = false; err.textContent = x.message || 'Sign-up failed — try again.';
+        });
+      });
+    }
+
+    track('firms_shown', String(firms.length) + ':' + t.doc_type + (member ? ':member' : ':guest'));
   }
 
   function renderFirmDetail(idx) {
@@ -480,10 +573,10 @@
 
         '<div class="fact-grid">' +
           '<div class="fact"><span class="fact-l">Licence</span><span class="fact-v">' +
-            (f.licence === 'lawyers+paralegals' ? 'Lawyers &amp; paralegals' : 'Licensed paralegals') + '</span></div>' +
+            licenceLabel(f) + '</span></div>' +
           '<div class="fact"><span class="fact-l">Team</span><span class="fact-v">' + esc(f.team) + '</span></div>' +
           '<div class="fact"><span class="fact-l">Coverage</span><span class="fact-v">' + esc(f.coverage) + '</span></div>' +
-          '<div class="fact"><span class="fact-l">Their listed price</span><span class="fact-v">from ' + money0(f.from) + '</span></div>' +
+          '<div class="fact"><span class="fact-l">Their listed price</span><span class="fact-v">' + priceLabel(f) + '</span></div>' +
         '</div>' +
 
         (o.repCost && o.repCost[0]
@@ -554,7 +647,7 @@
       '</div>'
     );
 
-    $('[data-back]', stage).addEventListener('click', function () { renderFirmDetail(idx); });
+    $('[data-back]', stage).addEventListener('click', function () { f.featured ? renderFirms() : renderFirmDetail(idx); });
     $('.lead-form', stage).addEventListener('submit', function (e) {
       e.preventDefault();
       submitLead(e.target, f, t);
@@ -610,8 +703,11 @@
     show(
       '<div class="card card-pad center scan-done">' +
         '<div class="done-ic">✓</div>' +
-        '<h3>Request received</h3>' +
-        '<p class="lede mt-16">We’ll connect you with ' + esc(firm.name) + ' for your free case review, usually within one business day. We emailed you a copy of exactly what you sent.</p>' +
+        (firm.featured
+          ? '<h3>Sent to ' + esc(firm.name) + '</h3>' +
+            '<p class="lede mt-16">They’ll reply to you directly by email or phone. We emailed you a copy of exactly what was sent.</p>'
+          : '<h3>Request received</h3>' +
+            '<p class="lede mt-16">We’ll connect you with ' + esc(firm.name) + ' for your free case review, usually within one business day. We emailed you a copy of exactly what you sent.</p>') +
         '<div class="done-next mt-32">' +
           '<a class="btn btn-ghost" href="/app.html">Track this ticket in the app</a>' +
           '<a class="btn btn-ghost" href="/blog/how-to-dispute-parking-ticket-toronto.html">How disputes work →</a>' +

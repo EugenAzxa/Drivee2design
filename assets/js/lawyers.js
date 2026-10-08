@@ -16,6 +16,25 @@
 
 window.DRIVEE_FIRMS = [
   {
+    // Drivee partner: shown first to every driver, contact details open.
+    // Leads go straight to the firm (with a tracking copy to Drivee).
+    id: 'bajwa',
+    name: 'Bajwa Law Firm',
+    email: 'info@bajwalawfirm.ca',
+    phone: '(416) 468-2245',
+    website: 'https://bajwalawfirm.ca/',
+    featured: true,
+    from: null,                          // no published price — free consultation
+    licence: 'lawyers',
+    tags: ['all'],
+    coverage: 'Toronto · 1280 Finch Ave W',
+    foundedLabel: 'Law firm · free consultation',
+    claim: '"Available 24/7 For You!"',
+    team: 'Lawyers: criminal defence, impaired driving and car accident claims',
+    area: 'Toronto · Ontario',
+    perks: ['Free consultation', '24/7 bail line']
+  },
+  {
     id: 'xcopper',
     name: 'X-Copper Professional Corp',
     email: 'info@xcopper.com',
@@ -125,5 +144,15 @@ window.driveeMatchFirms = function (docType) {
   }
   if (!hit.length) hit = window.DRIVEE_FIRMS.slice();
 
-  return hit.sort(function (a, b) { return a.from - b.from; });
+  // Partner firms first, then everyone else cheapest first.
+  return hit.sort(function (a, b) {
+    if (!!a.featured !== !!b.featured) return a.featured ? -1 : 1;
+    return (a.from || 0) - (b.from || 0);
+  });
+};
+
+/* Cheapest firm with a published price — for the cost comparison. */
+window.driveeCheapestPriced = function (firms) {
+  return firms.filter(function (f) { return f.from; })
+    .sort(function (a, b) { return a.from - b.from; })[0] || null;
 };
