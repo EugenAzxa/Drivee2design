@@ -732,3 +732,11 @@
 @media (max-width:560px){
   .unlock-row{ flex-direction:column; }
 }
+
+/* save-to-profile band on the verdict */
+.save-band{ flex-wrap:wrap; margin-top:14px; background:var(--void-2); border-color:var(--line-2); }
+.save-band .save-form, .save-band .save-msg{ flex-basis:100%; }
+.save-msg{ font-size:14px; color:var(--green); font-weight:700; }
+.save-msg.bad{ color:#FF8A7E; }
+.save-msg a{ color:var(--ink); text-decoration:underline; margin-left:4px; }
+.save-band [hidden], .unlock [hidden], .acct [hidden]{ display:none !important; }

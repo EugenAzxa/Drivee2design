@@ -1,0 +1,52 @@
+/* Profile page (account.html) — builds on drivee.css + home.css */
+.acct{ padding-top:clamp(110px,14vw,150px); padding-bottom:96px; min-height:70vh; }
+.acct-h{ font-size:clamp(30px,5vw,44px); font-weight:800; letter-spacing:-.03em; line-height:1.08; margin-top:14px; }
+.acct-muted{ font-size:14px; color:var(--ink-2); line-height:1.6; }
+.acct-sent{ font-size:14px; color:var(--green); font-weight:700; margin-top:12px; }
+
+.acct-top{ display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+.acct-top > div:nth-child(2){ flex:1; min-width:0; }
+.acct-top .acct-h{ font-size:clamp(26px,4vw,36px); margin-top:8px; }
+.acct-email{ overflow-wrap:anywhere; }
+.acct-avatar{
+  width:58px; height:58px; border-radius:50%; flex:none;
+  display:grid; place-items:center; font-size:24px; font-weight:800; color:#1A1206;
+  background:linear-gradient(135deg, var(--amber), #F5BB63);
+}
+
+.acct-row-h{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.acct-row-h .block-h{ margin-bottom:0; }
+.acct-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px; }
+.acct-saved{ font-size:14px; color:var(--green); font-weight:700; }
+
+.acct-ticket{
+  display:flex; align-items:center; gap:14px;
+  padding:14px 16px; border-radius:var(--r-sm, 12px);
+  background:var(--void); border:1px solid var(--line);
+}
+.acct-ticket + .acct-ticket{ margin-top:10px; }
+.acct-ticket-main{ flex:1; min-width:0; }
+.acct-ticket-ref{ font-weight:700; font-size:15px; overflow-wrap:anywhere; }
+.acct-ticket-due{ font-size:13px; color:var(--ink-2); margin-top:3px; }
+.acct-chip{
+  flex:none; font-size:12px; font-weight:800; padding:5px 10px; border-radius:999px;
+  background:var(--amber-dim); color:var(--amber);
+}
+.acct-chip.ok{ background:rgba(37,192,101,.14); color:var(--green); }
+.acct-chip.late{ background:rgba(255,95,80,.14); color:#FF8A7E; }
+.acct-x{
+  flex:none; width:32px; height:32px; border-radius:50%; cursor:pointer;
+  background:transparent; border:1px solid var(--line); color:var(--ink-3); font-size:16px;
+}
+.acct-x:hover{ color:var(--ink); border-color:var(--line-2); }
+.acct-empty{ font-size:14px; color:var(--ink-3); padding:18px; text-align:center;
+  border:1px dashed var(--line-2); border-radius:12px; }
+
+.acct-car{ display:inline-flex; align-items:center; gap:8px; padding:9px 13px; margin:0 8px 8px 0;
+  border-radius:999px; background:var(--void); border:1px solid var(--line); font-size:14px; }
+.acct-car b{ font-family:var(--mono); font-size:13px; color:var(--ink-2); font-weight:700; }
+
+@media (max-width:560px){
+  .acct-grid{ grid-template-columns:1fr; }
+  .acct-top .acct-signout{ width:100%; }
+}

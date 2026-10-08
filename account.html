@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My Profile | Drivee</title>
+<meta name="description" content="Your Drivee account: saved tickets with deadline reminders, your profile and your cars. The same account as the Drivee app.">
+<meta name="robots" content="noindex,follow">
+<link rel="canonical" href="https://www.drivee.ca/account.html">
+<meta name="theme-color" content="#08060F">
+<link rel="manifest" href="/manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/drivee.css">
+<link rel="stylesheet" href="/assets/css/home.css">
+<link rel="stylesheet" href="/assets/css/account.css">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+
+<header class="nav" id="nav">
+  <div class="wrap nav-in">
+    <a class="logo" href="/">Drivee<span class="logo-dot">.</span></a>
+    <nav class="nav-links">
+      <a href="/#scan">Scan a ticket</a>
+      <a href="/#lawyers">Find a lawyer</a>
+      <a href="/report.html">VIN check</a>
+      <a href="/blog/">Guides</a>
+      <a href="/account.html" aria-current="page">My profile</a>
+    </nav>
+    <a class="btn btn-primary btn-sm nav-cta" href="/#scan">Scan a ticket</a>
+    <button class="nav-burger" id="burger" aria-label="Menu" aria-expanded="false">
+      <svg width="18" height="14" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M1 1h16M1 7h16M1 13h16"/>
+      </svg>
+    </button>
+  </div>
+  <div class="nav-drawer" id="drawer">
+    <a href="/#scan">Scan a ticket</a>
+    <a href="/#lawyers">Find a lawyer</a>
+    <a href="/report.html">VIN check</a>
+    <a href="/blog/">Guides</a>
+    <a href="/account.html">My profile</a>
+    <a href="/app.html">Open the app →</a>
+  </div>
+</header>
+
+<main class="acct wrap wrap-narrow">
+
+  <!-- loading -->
+  <section class="acct-view" data-view="loading">
+    <p class="acct-muted">Loading your profile…</p>
+  </section>
+
+  <!-- signed out -->
+  <section class="acct-view" data-view="out" hidden>
+    <div class="eyebrow eyebrow-amber">Your Drivee account</div>
+    <h1 class="acct-h">Sign in to your profile</h1>
+    <p class="lede mt-16">Save your tickets and get an email before each deadline, see every firm that can take
+      your charge, and keep your cars in one place. It’s the same account as the Drivee app.</p>
+
+    <form class="card card-pad mt-32 acct-signin" novalidate>
+      <h2 class="block-h">No password — we email you a sign-in link</h2>
+      <div class="unlock-row">
+        <input name="email" type="email" autocomplete="email" required placeholder="you@example.com" aria-label="Email">
+        <button class="btn btn-amber" type="submit">Email me a link</button>
+      </div>
+      <p class="lead-err" hidden></p>
+      <p class="acct-sent" hidden>✓ Check your inbox. Tap the link in the email and you’ll land back here, signed in.</p>
+      <p class="trust">New here? The same button creates your free account.</p>
+    </form>
+  </section>
+
+  <!-- signed in -->
+  <section class="acct-view" data-view="in" hidden>
+    <div class="acct-top">
+      <div class="acct-avatar" aria-hidden="true"></div>
+      <div>
+        <div class="eyebrow eyebrow-amber">My profile</div>
+        <h1 class="acct-h acct-hello">Hi there</h1>
+        <p class="acct-muted acct-email"></p>
+      </div>
+      <button class="btn btn-ghost btn-sm acct-signout" type="button">Sign out</button>
+    </div>
+
+    <div class="card card-pad mt-32">
+      <div class="acct-row-h">
+        <h2 class="block-h">My tickets</h2>
+        <a class="btn btn-amber btn-sm" href="/#scan">+ Scan a ticket</a>
+      </div>
+      <p class="acct-muted">We email you before each deadline, so a ticket never turns into late fees.</p>
+      <div class="acct-tickets mt-16"></div>
+    </div>
+
+    <form class="card card-pad mt-24 acct-profile" novalidate>
+      <h2 class="block-h">Profile</h2>
+      <div class="acct-grid">
+        <label class="fld"><span>Your name</span>
+          <input name="name" autocomplete="name" placeholder="Alex Chen"></label>
+        <label class="fld"><span>Licence plate</span>
+          <input name="plate" autocomplete="off" placeholder="ABCD 123" style="text-transform:uppercase"></label>
+      </div>
+      <div class="acct-row-h mt-16">
+        <button class="btn btn-primary btn-sm" type="submit">Save profile</button>
+        <span class="acct-saved" hidden>✓ Saved</span>
+      </div>
+      <p class="lead-err" hidden></p>
+    </form>
+
+    <div class="card card-pad mt-24">
+      <div class="acct-row-h">
+        <h2 class="block-h">My cars</h2>
+        <a class="btn btn-ghost btn-sm" href="/app.html">Manage in the app →</a>
+      </div>
+      <div class="acct-cars mt-16"></div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-bot">
+      <span>© <span id="yr">2026</span> Drivee · Toronto, Ontario</span>
+      <span>
+        <a href="/contact.html">Contact</a> ·
+        <a href="/privacy.html">Privacy</a> ·
+        <a href="mailto:drivee.canada@gmail.com">drivee.canada@gmail.com</a>
+      </span>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/js/account.js"></script>
+<script src="/assets/js/main.js" defer></script>
+<script src="/assets/js/profile.js" defer></script>
+</body>
+</html>

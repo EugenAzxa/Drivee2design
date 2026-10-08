@@ -3,6 +3,7 @@
    The same Supabase project as app.html, so an account made here is the
    same account in the app. Signing up sends a magic link; the firm list
    unlocks straight away, and the link confirms the account later.
+   It also backs the profile page (account.html).
 
    The Supabase SDK is only loaded when someone actually signs up — the
    landing page stays light for everyone else.
@@ -38,6 +39,24 @@
     });
   }
 
+  function validEmail(e) { return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e); }
+
+  /* Signed-in user, or null. Loads the SDK only if a session might exist,
+     or if the page asks for it (the profile page always does). */
+  function user(force) {
+    if (!force && !get(SESSION_KEY)) return Promise.resolve(null);
+    return loadClient().then(function (db) {
+      return db.auth.getSession();
+    }).then(function (res) {
+      var u = res && res.data && res.data.session ? res.data.session.user : null;
+      if (u && u.email) { set(MEMBER_KEY, u.email); set('drivee_signup_email', u.email); }
+      return u;
+    }).catch(function () { return null; });
+  }
+
+  function need(u) { if (!u) throw new Error('Please sign in first.'); return u; }
+  function check(res) { if (res && res.error) throw new Error(res.error.message); return res ? res.data : null; }
+
   window.DriveeAccount = {
     /* Signed in to the app already, or signed up here before. */
     isMember: function () {
@@ -46,19 +65,64 @@
 
     email: function () { return get(MEMBER_KEY) || ''; },
 
-    register: function (email) {
+    user: user,
+
+    /* Email-only sign-up / sign-in. `redirect` is where the magic link lands. */
+    register: function (email, redirect) {
       email = String(email || '').trim();
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-        return Promise.reject(new Error('Enter a valid email.'));
-      }
+      if (!validEmail(email)) return Promise.reject(new Error('Enter a valid email.'));
       return loadClient().then(function (db) {
-        return db.auth.signInWithOtp({ email: email, options: { shouldCreateUser: true } });
+        var opts = { shouldCreateUser: true };
+        if (redirect) opts.emailRedirectTo = redirect;
+        return db.auth.signInWithOtp({ email: email, options: opts });
       }).then(function (res) {
         if (res && res.error) throw new Error(res.error.message || 'Sign-up failed — try again.');
         set(MEMBER_KEY, email);
         set('drivee_signup_email', email);
         return email;
       });
+    },
+
+    signOut: function () {
+      try { localStorage.removeItem(MEMBER_KEY); } catch (e) {}
+      return loadClient().then(function (db) { return db.auth.signOut(); });
+    },
+
+    /* The same tables the app uses, so the website and the app stay in sync. */
+    profile: function (u) {
+      return loadClient().then(function (db) {
+        return db.from('profiles').select('full_name, license_plate').eq('id', need(u).id).maybeSingle();
+      }).then(check);
+    },
+    saveProfile: function (u, name, plate) {
+      return loadClient().then(function (db) {
+        return db.from('profiles').upsert({
+          id: need(u).id, full_name: name, license_plate: plate, updated_at: new Date().toISOString()
+        });
+      }).then(check);
+    },
+    tickets: function (u) {
+      return loadClient().then(function (db) {
+        return db.from('reminders').select('id, ticket_ref, due_date').eq('user_id', need(u).id).order('due_date');
+      }).then(check);
+    },
+    /* A saved ticket is a reminder row — the existing cron emails before the due date. */
+    saveTicket: function (u, ref, dueDate) {
+      return loadClient().then(function (db) {
+        return db.from('reminders').insert({
+          user_id: need(u).id, ticket_ref: ref, due_date: dueDate, email: u.email || null
+        }).select('id').single();
+      }).then(check);
+    },
+    removeTicket: function (u, id) {
+      return loadClient().then(function (db) {
+        return db.from('reminders').delete().eq('id', id).eq('user_id', need(u).id);
+      }).then(check);
+    },
+    cars: function (u) {
+      return loadClient().then(function (db) {
+        return db.from('cars').select('id, nickname, plate, emoji').eq('user_id', need(u).id).order('created_at');
+      }).then(check);
     }
   };
 })();

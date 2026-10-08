@@ -80,6 +80,11 @@ module.exports = async function handler(req, res) {
       '<p style="margin-top:22px;padding-top:14px;border-top:1px solid #eee;color:#9AA1B2;font-size:12px">' +
         footer +
       '</p>' +
+      '<p style="margin-top:10px;color:#9AA1B2;font-size:12px">' +
+        'Sent via <a href="https://www.drivee.ca/?utm_source=email&amp;utm_medium=lead" ' +
+        'style="color:#2D63F0;font-weight:700;text-decoration:none">drivee.ca</a>' +
+        ' · free ticket scanner for Ontario drivers' +
+      '</p>' +
     '</div>';
   }
 

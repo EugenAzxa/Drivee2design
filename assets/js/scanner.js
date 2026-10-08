@@ -190,6 +190,87 @@
            '<span class="td-v mono">' + esc(value) + '</span></div>';
   }
 
+  /* ── save to profile ───────────────────────────────────────────────
+     A saved ticket is a reminder row on the driver's account, so the
+     existing reminder cron emails them before the deadline. Without a due
+     date on the paper we use the 15-day response window from the issue date. */
+  function ticketDue(t) {
+    if (t.due_date) return t.due_date;
+    var p = String(t.issued_date || '').split('-').map(Number);
+    if (p.length !== 3 || !p[0]) return null;
+    var d = new Date(Date.UTC(p[0], p[1] - 1, p[2] + 15));
+    return d.toISOString().slice(0, 10);
+  }
+  function ticketRef(t) {
+    var o = ON.offence(t.doc_type);
+    return [t.ticket_number ? '#' + t.ticket_number : null, o.label,
+      t.amount ? money(t.amount) : null, t.municipality || null].filter(Boolean).join(' · ');
+  }
+  function saveBandHtml(t) {
+    var due = ticketDue(t);
+    var days = daysUntil(due);
+    if (!due || days === null || days < 0) return '';
+    return '<div class="cta-band save-band">' +
+      '<div>' +
+        '<h4 class="block-h">Save it and get a reminder</h4>' +
+        '<p class="cta-sub">We’ll email you before ' + esc(due) +
+          (t.due_date ? '' : ' (15 days from the issue date)') + ', so it never turns into late fees.</p>' +
+      '</div>' +
+      '<button class="btn btn-ghost btn-lg" type="button" data-save>Save to my profile</button>' +
+      '<form class="save-form" novalidate hidden>' +
+        '<div class="unlock-row">' +
+          '<input name="email" type="email" autocomplete="email" required placeholder="you@example.com" aria-label="Email">' +
+          '<button class="btn btn-amber" type="submit">Email me a link</button>' +
+        '</div>' +
+        '<p class="trust">Free account, no password. Tap the link in the email and the ticket is saved to your profile.</p>' +
+      '</form>' +
+      '<p class="save-msg" hidden></p>' +
+    '</div>';
+  }
+  function wireSave(t) {
+    var btn = $('[data-save]', stage);
+    if (!btn || !window.DriveeAccount) return;
+    var A = window.DriveeAccount;
+    var form = $('.save-form', stage), msg = $('.save-msg', stage);
+    var item = { ref: ticketRef(t), due: ticketDue(t) };
+    function say(html, bad) { msg.hidden = false; msg.className = 'save-msg' + (bad ? ' bad' : ''); msg.innerHTML = html; }
+
+    btn.addEventListener('click', function () {
+      btn.disabled = true; btn.textContent = 'Saving…';
+      A.user().then(function (u) {
+        if (!u) {
+          btn.hidden = true; form.hidden = false;
+          if (A.email()) form.email.value = A.email();
+          form.email.focus();
+          return;
+        }
+        return A.saveTicket(u, item.ref, item.due).then(function () {
+          btn.hidden = true;
+          say('✓ Saved. We’ll remind you before ' + esc(item.due) + '. <a href="/account.html">See my profile →</a>');
+          track('ticket_saved', 'signed-in');
+        });
+      }).catch(function (x) {
+        btn.disabled = false; btn.textContent = 'Save to my profile';
+        say(esc(x.message || 'Could not save — try again.'), true);
+      });
+    });
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var b = form.querySelector('button');
+      b.disabled = true; b.textContent = 'Sending…';
+      try { localStorage.setItem('drivee_pending_ticket', JSON.stringify(item)); } catch (x) {}
+      A.register(form.email.value, location.origin + '/account.html').then(function () {
+        form.hidden = true;
+        say('✓ Check your inbox. Tap the link and this ticket is saved to your profile.');
+        track('magic_link_sent', 'save-ticket');
+      }).catch(function (x) {
+        b.disabled = false; b.textContent = 'Email me a link';
+        say(esc(x.message || 'Could not send the link — try again.'), true);
+      });
+    });
+  }
+
   /* ── the verdict screen ────────────────────────────────────────── */
   function renderVerdict(t) {
     if (stage._tick) clearInterval(stage._tick);
@@ -287,11 +368,13 @@
             '</div>' +
             '<button class="btn btn-amber btn-lg" type="button" data-firms>See who can help →</button>' +
           '</div>' +
+          saveBandHtml(t) +
         '</div>' +
       '</div>'
     );
 
     $('[data-firms]', stage).addEventListener('click', function () { renderFirms(); });
+    wireSave(t);
     track('scan_verdict', v.key + ':' + (t.doc_type || '?') + ':' + t.confidence);
   }
 
