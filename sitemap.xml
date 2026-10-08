@@ -120,4 +120,22 @@
     <priority>0.3</priority>
   </url>
 
+  <url>
+    <loc>https://www.drivee.ca/blog/car-accident-toronto-what-to-do.html</loc>
+    <lastmod>2026-10-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.drivee.ca/blog/careless-driving-ticket-ontario.html</loc>
+    <lastmod>2026-10-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.drivee.ca/blog/car-accident-insurance-ontario.html</loc>
+    <lastmod>2026-10-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>
