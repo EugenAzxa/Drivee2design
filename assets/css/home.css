@@ -740,3 +740,6 @@
 .save-msg.bad{ color:#FF8A7E; }
 .save-msg a{ color:var(--ink); text-decoration:underline; margin-left:4px; }
 .save-band [hidden], .unlock [hidden], .acct [hidden]{ display:none !important; }
+
+/* partner lawyer on the verdict itself */
+.verdict-lawyer{ margin-top:30px; }

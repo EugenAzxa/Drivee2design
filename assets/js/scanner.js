@@ -283,6 +283,8 @@
     var parking = ON.isParking(t.doc_type);
     var firms   = window.driveeMatchFirms(t.doc_type);
     var priced  = window.driveeCheapestPriced(firms);
+    var partnerIdx = -1;
+    firms.forEach(function (f, i) { if (partnerIdx < 0 && f.featured) partnerIdx = i; });
     var cost    = ON.costPicture({ type: t.doc_type, amount: t.amount }, priced && priced.from);
     state.firms = firms;
     state.cost  = cost;
@@ -361,19 +363,36 @@
           deadlineHtml +
           costHtml +
 
-          '<div class="cta-band">' +
-            '<div>' +
-              '<h4 class="block-h">Talk to a lawyer about this ticket</h4>' +
-              '<p class="cta-sub">Free case review. Contact a Drivee partner lawyer in one tap, or compare all ' + firms.length + ' matched firms.</p>' +
-            '</div>' +
-            '<button class="btn btn-amber btn-lg" type="button" data-firms>See who can help →</button>' +
-          '</div>' +
+          (partnerIdx >= 0
+            ? '<div class="verdict-lawyer">' +
+                '<h4 class="block-h">Talk to a lawyer about this ticket — free</h4>' +
+                partnerCard(firms[partnerIdx], partnerIdx) +
+                (firms.length > 1
+                  ? '<button class="btn btn-ghost btn-block mt-16" type="button" data-firms>Compare all ' + firms.length + ' matched firms →</button>'
+                  : '') +
+              '</div>'
+            : '<div class="cta-band">' +
+                '<div>' +
+                  '<h4 class="block-h">Talk to a lawyer about this ticket</h4>' +
+                  '<p class="cta-sub">Free case review with a firm that handles this charge.</p>' +
+                '</div>' +
+                '<button class="btn btn-amber btn-lg" type="button" data-firms>See who can help →</button>' +
+              '</div>') +
           saveBandHtml(t) +
         '</div>' +
       '</div>'
     );
 
-    $('[data-firms]', stage).addEventListener('click', function () { renderFirms(); });
+    var more = $('[data-firms]', stage);
+    if (more) more.addEventListener('click', function () { renderFirms(); });
+    stage.querySelectorAll('[data-contact-firm]').forEach(function (el) {
+      el.addEventListener('click', function () { renderLeadForm(+el.getAttribute('data-contact-firm')); });
+    });
+    stage.querySelectorAll('[data-contact]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        track('partner_contact_' + el.getAttribute('data-contact'), firms[partnerIdx] && firms[partnerIdx].id);
+      });
+    });
     wireSave(t);
     track('scan_verdict', v.key + ':' + (t.doc_type || '?') + ':' + t.confidence);
   }
@@ -730,7 +749,7 @@
       '</div>'
     );
 
-    $('[data-back]', stage).addEventListener('click', function () { f.featured ? renderFirms() : renderFirmDetail(idx); });
+    $('[data-back]', stage).addEventListener('click', function () { f.featured ? renderVerdict(state.ticket) : renderFirmDetail(idx); });
     $('.lead-form', stage).addEventListener('submit', function (e) {
       e.preventDefault();
       submitLead(e.target, f, t);
