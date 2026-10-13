@@ -3,9 +3,19 @@
 <head>
   <meta charset="UTF-8" />
 
-  <!-- The landing-page redirect that used to live here has been removed:
-       / is now the marketing site and this file IS the app, so it must
-       always load. Deep links from the site point straight at /app.html. -->
+  <!-- ══════════════════════════════════════════════════════════════
+       WEB APP (/app.html). The website lives at / (index.html).
+       Opening the app marks the session as "in the app", so a return to
+       "/" — the Google sign-in round-trip lands there — is forwarded back
+       here by the website's head script. Leaving via the back-to-landing
+       link clears the mark.
+  ══════════════════════════════════════════════════════════════ -->
+  <script>
+    try {
+      sessionStorage.removeItem('drivee_design');
+      sessionStorage.setItem('drivee_app', '1');
+    } catch (e) {}
+  </script>
 
   <!-- ═══════════════════════════════════════════════════════════════
        DESIGN V2 — now the DEFAULT for drivee.ca
@@ -16159,7 +16169,9 @@
       trackEvent('magic_link_sent', 'google-start');
       db.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: window.location.origin + window.location.pathname }
+        // "/" is the redirect Supabase already allows; the website forwards
+        // back to /app.html because this session is marked as in the app.
+        options: { redirectTo: window.location.origin + '/' }
       }).then(function(res){
         if (res && res.error) showToast('Google sign-in unavailable — use email instead');
       }).catch(function(){

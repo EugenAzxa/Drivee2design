@@ -2,6 +2,25 @@
 <html lang="en-CA">
 <head>
 <meta charset="utf-8">
+<!-- The website is the homepage (/). The web app lives at /app.html.
+     Forward to the app only when it was asked for: an old /?app=1 link, or a
+     session that is already in the app (the Google sign-in round-trip
+     returns here with its token in the URL). A link to a section of this
+     page (/#scan, /#faq …) always stays on the website. -->
+<script>
+  (function () {
+    try {
+      var q = new URLSearchParams(location.search);
+      var landingAnchor = /^#(scan|how|lawyers|features|app|faq)$/.test(location.hash);
+      var inApp = sessionStorage.getItem('drivee_app') === '1';
+      if (q.has('app') || (inApp && !landingAnchor)) {
+        q.delete('app');
+        var rest = q.toString();
+        location.replace('/app.html' + (rest ? '?' + rest : '') + location.hash);
+      }
+    } catch (e) {}
+  })();
+</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 
 <title>Dispute a Parking or Traffic Ticket in Toronto &amp; Ontario — Free AI Ticket Scan | Drivee</title>
