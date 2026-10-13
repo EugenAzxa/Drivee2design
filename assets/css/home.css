@@ -75,16 +75,7 @@
 .intake{ grid-area:intake; align-self:center; }
 
 .hero h1{ margin-top:22px; }
-.hero-sub{ margin-top:22px; max-width:46ch; }
-.hero-badges{ display:flex; flex-wrap:wrap; gap:10px; margin-top:26px; }
-
-.hero-proof{
-  display:flex; flex-wrap:wrap; gap:26px; margin-top:34px;
-  padding-top:26px; border-top:1px solid var(--line);
-}
-.hero-proof-i{ display:flex; flex-direction:column; gap:3px; }
-.hero-proof-n{ font-family:var(--mono); font-size:25px; font-weight:800; letter-spacing:-.03em; }
-.hero-proof-l{ font-size:12px; color:var(--ink-3); letter-spacing:.05em; text-transform:uppercase; font-weight:600; }
+.hero-sub{ margin-top:22px; max-width:46ch; text-wrap:pretty; }
 
 /* ── the dropzone — the most important element on the site ───────── */
 .intake{ position:relative; }
@@ -277,11 +268,6 @@
   background:var(--panel); border:1px solid var(--line); color:var(--ink-2);
 }
 
-/* the standalone directory breathes better in two columns */
-@media (min-width:860px){
-  #firm-directory{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-}
-
 .firm-est{ font-size:13.5px; color:var(--green); font-weight:700; margin-top:10px; }
 .firm-quote{
   margin:16px 0 0; padding:14px 18px; border-left:2px solid var(--amber);
@@ -344,6 +330,10 @@
 /* ── feature grid ────────────────────────────────────────────────── */
 .feat-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px; margin-top:52px; }
 .feat{ padding:28px; display:flex; flex-direction:column; gap:11px; }
+/* four cards: one row on a wide screen, two by two below that */
+.feat-grid-4{ grid-template-columns:repeat(4,1fr); }
+@media (max-width:1100px){ .feat-grid-4{ grid-template-columns:repeat(2,1fr); } }
+@media (max-width:620px){ .feat-grid-4{ grid-template-columns:1fr; } }
 .feat-n{
   font-family:var(--mono); font-size:11px; font-weight:800; color:var(--blue-lite);
   letter-spacing:.16em;
@@ -386,6 +376,11 @@
 .leg{ padding:20px; border-radius:var(--r); border:1px solid var(--line); background:var(--void-2); }
 .leg-k{ font-family:var(--mono); font-size:11px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
 .leg p{ font-size:14px; color:var(--ink-2); margin-top:8px; }
+@media (max-width:620px){
+  .legend{ grid-template-columns:1fr 1fr; gap:10px; margin-top:28px; }
+  .leg{ padding:14px; }
+  .leg p{ font-size:13px; }
+}
 .leg-red   .leg-k{ color:#FF8C82; }
 .leg-amber .leg-k{ color:#F5BB63; }
 .leg-blue  .leg-k{ color:var(--blue-lite); }
@@ -395,6 +390,7 @@
 .quotes{ display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; margin-top:52px; }
 .quote{ padding:26px; }
 .quote-stars{ color:var(--amber); font-size:14px; letter-spacing:2px; }
+.quote blockquote{ margin:0; }
 .quote p{ font-family:var(--serif); font-size:16.5px; line-height:1.65; margin-top:14px; }
 .quote-by{ font-size:13px; color:var(--ink-3); margin-top:16px; font-weight:600; }
 
@@ -439,7 +435,6 @@
   .cta-band .btn{ width:100%; }
   .fee-row{ grid-template-columns:76px 1fr auto; font-size:13px; gap:8px; }
   .fee-note{ font-size:12.5px; }
-  .hero-proof{ gap:18px; }
   .dz-actions .btn{ width:100%; }
 }
 
@@ -631,14 +626,12 @@
   .hero-sub{ margin-top:16px; font-size:16px; }
 
   .hero-grid{ gap:20px; }
-  .hero-badges{ margin-top:18px; gap:8px; }
   .install-row{ margin-top:16px; }
 
   .dropzone{ padding:26px 18px; gap:11px; }
   .dz-ic{ width:52px; height:52px; border-radius:16px; }
   .dz-ic svg{ width:25px; height:25px; }
   .dz-sub{ font-size:13.5px; }
-  .hero-proof{ margin-top:22px; padding-top:20px; gap:16px 24px; }
 }
 
 /* very small phones (iPhone SE and similar) */
@@ -647,27 +640,13 @@
   .ibadge{ flex:1 1 100%; }
 }
 
-/* the tail of the hero promise is desktop-only; phones get the first line */
-@media (max-width:620px){
-  .hero-sub-more{ display:none; }
-}
 
-/* On a phone the install row is a primary CTA, so it leads; the three trust
-   pills repeat the dropzone note and can wait below it. */
 @media (max-width:620px){
   .install-row{ margin-top:14px; }
   .install-note{ margin-top:8px; font-size:12px; }
-  .hero-badges{ margin-top:14px; }
 }
 
-/* Two complete sentences rather than one truncated mid-clause: the phone gets
-   the short promise, the desktop gets the full one. */
-.sub-short{ display:none; }
-.sub-full{ display:inline; }
 @media (max-width:620px){
-  .sub-short{ display:inline; }
-  .sub-full{ display:none; }
-
   /* Side-by-side pickers reclaim ~60px so the install row clears the fold. */
   .dz-actions{ flex-wrap:nowrap; gap:8px; }
   .dz-actions .btn{ width:auto; flex:1 1 0; padding:14px 10px; font-size:14px; }
@@ -743,3 +722,13 @@
 
 /* partner lawyer on the verdict itself */
 .verdict-lawyer{ margin-top:30px; }
+
+/* the directory intro sits beside the partner card, not above an empty column */
+.lawyers-grid{
+  display:grid; grid-template-columns:1fr minmax(0,460px);
+  gap:clamp(32px,5vw,72px); align-items:center;
+}
+.fine{ font-size:12.5px; color:var(--ink-3); }
+@media (max-width:860px){
+  .lawyers-grid{ grid-template-columns:1fr; }
+}
