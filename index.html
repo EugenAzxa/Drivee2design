@@ -116,7 +116,7 @@
       <a href="/blog/">Guides</a>
       <a href="/account.html">My profile</a>
     </nav>
-    <a class="btn btn-primary btn-sm nav-cta" href="/app.html">Open the app</a>
+    <a class="btn btn-primary btn-sm nav-cta" href="#app">Get the app</a>
     <button class="nav-burger" id="burger" aria-label="Menu" aria-expanded="false">
       <svg width="18" height="14" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <path d="M1 1h16M1 7h16M1 13h16"/>
@@ -129,7 +129,7 @@
     <a href="#features">Services</a>
     <a href="/blog/">Guides</a>
     <a href="/account.html">My profile</a>
-    <a href="/app.html">Open the app →</a>
+    <a href="#app">Get the app →</a>
   </div>
 </header>
 
@@ -154,30 +154,17 @@
       </div>
 
       <div class="hero-bottom">
-        <!-- Drivee is a PWA, so these install it rather than linking to a
-             store listing that does not exist. See assets/js/install.js. -->
-        <div class="install-row" id="install-row">
-          <button class="ibadge" type="button" data-install="primary">
-            <svg class="ib-ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M3 20.5V3.5c0-.6.3-1.1.8-1.4l10 8.4-10 10.6a1.6 1.6 0 0 1-.8-1.4zM16.2 13.6 5.9 21.9l9.2-5.3zM19.9 10.7c.6.4.6 1.3 0 1.7l-2.4 1.4-2.6-2.2 2.6-2.2zM5.9 2.1l10.3 8.3-1.1.9z"/>
-            </svg>
-            <span class="ib-tx">
-              <span class="ib-sub">Add to home screen</span>
-              <span class="ib-main">Android &amp; Chrome</span>
-            </span>
-          </button>
-
-          <button class="ibadge" type="button" data-install="ios">
-            <svg class="ib-ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M16.4 12.7c0-2.2 1.8-3.3 1.9-3.4-1-1.5-2.6-1.7-3.2-1.7-1.4-.1-2.7.8-3.3.8-.7 0-1.7-.8-2.8-.8-1.5 0-2.8.8-3.5 2.1-1.5 2.6-.4 6.5 1.1 8.6.7 1 1.6 2.2 2.7 2.2 1.1 0 1.5-.7 2.8-.7s1.7.7 2.8.7c1.2 0 1.9-1 2.6-2.1.8-1.2 1.2-2.4 1.2-2.4s-2.3-.9-2.3-3.3zM14.2 5.9c.6-.7 1-1.7.9-2.7-.9 0-2 .6-2.6 1.3-.6.6-1.1 1.7-.9 2.6 1 .1 2-.5 2.6-1.2z"/>
-            </svg>
-            <span class="ib-tx">
-              <span class="ib-sub">Add to home screen</span>
-              <span class="ib-main">iPhone &amp; iPad</span>
-            </span>
-          </button>
+        <div class="store-row">
+          <a class="ibadge" href="https://apps.apple.com/ca/app/drivee-canada/id6785311044" target="_blank" rel="noopener" data-store="appstore-hero" aria-label="Download Drivee Canada on the App Store">
+            <svg class="ib-ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.4 12.7c0-2.2 1.8-3.3 1.9-3.4-1-1.5-2.6-1.7-3.2-1.7-1.4-.1-2.7.8-3.3.8-.7 0-1.7-.8-2.8-.8-1.5 0-2.8.8-3.5 2.1-1.5 2.6-.4 6.5 1.1 8.6.7 1 1.6 2.2 2.7 2.2 1.1 0 1.5-.7 2.8-.7s1.7.7 2.8.7c1.2 0 1.9-1 2.6-2.1.8-1.2 1.2-2.4 1.2-2.4s-2.3-.9-2.3-3.3zM14.2 5.9c.6-.7 1-1.7.9-2.7-.9 0-2 .6-2.6 1.3-.6.6-1.1 1.7-.9 2.6 1 .1 2-.5 2.6-1.2z"/></svg>
+            <span class="ib-tx"><span class="ib-sub">Download on the</span><span class="ib-main">App Store</span></span>
+          </a>
+          <a class="ibadge" href="https://play.google.com/store/apps/details?id=ca.drivee.app" target="_blank" rel="noopener" data-store="googleplay-hero" aria-label="Get Drivee Canada on Google Play">
+            <svg class="ib-ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 20.5V3.5c0-.6.3-1.1.8-1.4l10 8.4-10 10.6a1.6 1.6 0 0 1-.8-1.4zM16.2 13.6 5.9 21.9l9.2-5.3zM19.9 10.7c.6.4.6 1.3 0 1.7l-2.4 1.4-2.6-2.2 2.6-2.2zM5.9 2.1l10.3 8.3-1.1.9z"/></svg>
+            <span class="ib-tx"><span class="ib-sub">Get it on</span><span class="ib-main">Google Play</span></span>
+          </a>
         </div>
-        <p class="install-note">No signup, no store, no commission. Works offline.</p>
+        <p class="install-note">Free on iPhone and Android. Scanning here needs no signup.</p>
       </div>
 
       <!-- the intake -->
@@ -369,6 +356,36 @@
   </div>
 </section>
 
+<!-- ── the native app: store listings, with the listing's own screenshots ── -->
+<section class="band band-line" id="app">
+  <div class="wrap">
+    <div class="app-head reveal">
+      <div>
+        <div class="eyebrow">The Drivee app</div>
+        <h2 class="mt-16">Your tickets,<br>in your pocket.</h2>
+        <p class="lede mt-16">Scan tickets and road signs, see them on a map, and keep every scan in one place.</p>
+      </div>
+      <div class="store-row">
+          <a class="ibadge" href="https://apps.apple.com/ca/app/drivee-canada/id6785311044" target="_blank" rel="noopener" data-store="appstore-section" aria-label="Download Drivee Canada on the App Store">
+            <svg class="ib-ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.4 12.7c0-2.2 1.8-3.3 1.9-3.4-1-1.5-2.6-1.7-3.2-1.7-1.4-.1-2.7.8-3.3.8-.7 0-1.7-.8-2.8-.8-1.5 0-2.8.8-3.5 2.1-1.5 2.6-.4 6.5 1.1 8.6.7 1 1.6 2.2 2.7 2.2 1.1 0 1.5-.7 2.8-.7s1.7.7 2.8.7c1.2 0 1.9-1 2.6-2.1.8-1.2 1.2-2.4 1.2-2.4s-2.3-.9-2.3-3.3zM14.2 5.9c.6-.7 1-1.7.9-2.7-.9 0-2 .6-2.6 1.3-.6.6-1.1 1.7-.9 2.6 1 .1 2-.5 2.6-1.2z"/></svg>
+            <span class="ib-tx"><span class="ib-sub">Download on the</span><span class="ib-main">App Store</span></span>
+          </a>
+          <a class="ibadge" href="https://play.google.com/store/apps/details?id=ca.drivee.app" target="_blank" rel="noopener" data-store="googleplay-section" aria-label="Get Drivee Canada on Google Play">
+            <svg class="ib-ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 20.5V3.5c0-.6.3-1.1.8-1.4l10 8.4-10 10.6a1.6 1.6 0 0 1-.8-1.4zM16.2 13.6 5.9 21.9l9.2-5.3zM19.9 10.7c.6.4.6 1.3 0 1.7l-2.4 1.4-2.6-2.2 2.6-2.2zM5.9 2.1l10.3 8.3-1.1.9z"/></svg>
+            <span class="ib-tx"><span class="ib-sub">Get it on</span><span class="ib-main">Google Play</span></span>
+          </a>
+        </div>
+    </div>
+    <div class="shots reveal" tabindex="0" aria-label="App screenshots">
+      <img src="/assets/img/store/drivee-app-store-1.webp" width="600" height="1300" loading="lazy" decoding="async" alt="Scan tickets fast: the camera reads a parking ticket">
+      <img src="/assets/img/store/drivee-app-store-4.webp" width="600" height="1300" loading="lazy" decoding="async" alt="Dashboard with active tickets, amount owed and scan tools">
+      <img src="/assets/img/store/drivee-app-store-2.webp" width="600" height="1300" loading="lazy" decoding="async" alt="Map tickets and signs: nearby scans on a map of Toronto">
+      <img src="/assets/img/store/drivee-app-store-3.webp" width="600" height="1300" loading="lazy" decoding="async" alt="Find tickets and road signs near you">
+      <img src="/assets/img/store/drivee-app-store-5.webp" width="600" height="1300" loading="lazy" decoding="async" alt="Scan history of tickets, signs and inspections">
+      <img src="/assets/img/store/drivee-app-store-6.webp" width="600" height="1300" loading="lazy" decoding="async" alt="Services: car inspection and outstanding ticket check">
+    </div>
+</section>
+
 <!-- ── testimonials ──────────────────────────────────────────────── -->
 <section class="band band-line">
   <div class="wrap">
@@ -458,7 +475,7 @@
         </p>
         <div class="btn-row">
           <a class="btn btn-amber btn-lg" href="#scan">Scan my ticket</a>
-          <a class="btn btn-ghost btn-lg" href="/app.html">Open the full app</a>
+          <a class="btn btn-ghost btn-lg" href="#app">Get the app</a>
         </div>
       </div>
     </div>
@@ -521,7 +538,7 @@
 <script src="/assets/js/main.js" defer></script>
 <script src="/assets/js/account.js" defer></script>
 <script src="/assets/js/scanner.js" defer></script>
-<script src="/assets/js/install.js" defer></script>
+<script src="/assets/js/stores.js" defer></script>
 <script type="module" src="/assets/js/planet.js"></script>
 </body>
 </html>

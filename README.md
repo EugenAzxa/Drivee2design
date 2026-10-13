@@ -56,7 +56,7 @@ assets/js/planet.js         the Three.js particle planet (ES module)
 assets/js/scanner.js        scan → verdict → firm match → lead
 assets/js/lawyers.js        firm directory + licence-aware matching
 tools/test-tickets.js       run real ticket photos through the live scanner
-assets/js/install.js        home-screen install (real prompt / iOS sheet)
+assets/js/stores.js         store-badge click tracking
 assets/js/main.js           nav, scroll reveal, count-ups, PWA registration
 
 api/                    Vercel serverless functions
@@ -137,21 +137,20 @@ advice:
   and never reaches your record; an officer-issued one carries three. The
   scanner is told to distinguish them.
 
-## Install, not app stores
+## App stores
 
-Drivee is a PWA — there is no App Store or Play listing, and the store links
-already in app.html belong to Green P, a third-party app Drivee links out to.
-The hero badges therefore do what store badges promise instead of pointing at
-something that does not exist:
+Drivee ships as **Drivee Canada** on the
+[App Store](https://apps.apple.com/ca/app/drivee-canada/id6785311044) and
+[Google Play](https://play.google.com/store/apps/details?id=ca.drivee.app).
+The hero badges and the homepage's `#app` section link to those listings,
+and every "Get the app" link on the site points at `/#app`. The six
+screenshots in `assets/img/store/` are the App Store listing's own; replace
+them when the listing's change. `assets/js/stores.js` records which badge was
+tapped as an `app_open` event.
 
-* **Android / Chromium** — the real `beforeinstallprompt` flow. The badge
-  relabels itself to "Install in one tap" once the browser offers it.
-* **iOS** — a sheet with the Share → Add to Home Screen steps, because Apple
-  allows install only from Safari.
-* **Already installed** — the row hides itself.
-
-If a real store listing ever ships, swap the click handlers in
-`assets/js/install.js` for the store URLs and delete the rest.
+app.html (the web app) still serves: the officer radar lives there, so the
+radar card and the footer's map link still open it. Its own store links are
+Green P's (`id429679356`), a third-party app it links out to.
 
 ## Numbers and honesty
 

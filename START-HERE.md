@@ -85,10 +85,10 @@ invisible. Everything else passes.
 
 Each of these looks like it could be "simplified". Each was deliberate.
 
-**There is no App Store / Play listing.** Drivee is a PWA. The store URLs in
-`app.html` are Green P's (`id429679356`) — a third-party app we link out to.
-The hero badges run the real install flow instead of pointing at nothing. If a
-listing ever ships, swap the handlers in `assets/js/install.js`.
+**The store badges are real.** Drivee Canada is on the App Store
+(`id6785311044`) and Google Play (`ca.drivee.app`); the badges link there.
+The store URLs inside `app.html` belong to a different app, Green P
+(`id429679356`), which the web app links out to. Don't confuse the two.
 
 **Ontario only, enforced in code.** The scanner returns `is_ontario`, and
 anything else gets a screen that shows the read but suppresses the fee ladder,
@@ -127,7 +127,7 @@ api/lead.js             case-review request → the chosen firm
 assets/js/ontario.js    Ontario rules: APS vs POA, points, costs
 assets/js/lawyers.js    firm directory + licence-aware matching
 assets/js/scanner.js    scan → verdict → firms → lead
-assets/js/install.js    home-screen install
+assets/js/stores.js    store-badge click tracking
 tools/test-tickets.js   run real photos through the live scanner
 ```
 

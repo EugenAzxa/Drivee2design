@@ -524,11 +524,12 @@ a.feat:hover .feat-go{ color:var(--ink); }
   font-size:13.5px; color:var(--ink-2); line-height:1.65;
 }
 
-/* ── install badges ──────────────────────────────────────────────── */
-/* Store-badge shape and weight, but they install the PWA. */
-.install-row{ display:flex; flex-wrap:wrap; gap:10px; margin-top:22px; }
+/* ── store badges ────────────────────────────────────────────────── */
+/* links to the App Store and Google Play listings */
+.store-row{ display:flex; flex-wrap:wrap; gap:10px; margin-top:22px; }
 
 .ibadge{
+  text-decoration:none;
   display:inline-flex; align-items:center; gap:11px;
   padding:9px 18px 9px 15px; border-radius:13px;
   background:linear-gradient(168deg, rgba(255,255,255,.10), rgba(255,255,255,.035));
@@ -552,70 +553,13 @@ a.feat:hover .feat-go{ color:var(--ink); }
 .ib-sub{ font-size:10px; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-3); font-weight:700; }
 .ib-main{ font-size:15px; font-weight:700; letter-spacing:-.02em; margin-top:2px; }
 
-/* once the browser offers a real install, say so */
-.install-row.can-install .ibadge[data-install="primary"]{
-  border-color:rgba(110,155,255,.55);
-  background:linear-gradient(168deg, rgba(45,99,240,.28), rgba(45,99,240,.12));
-}
-
 .install-note{ margin-top:10px; font-size:12.5px; color:var(--ink-3); }
 
-/* ── install instructions sheet ──────────────────────────────────── */
-.install-sheet{ position:fixed; inset:0; z-index:200; display:grid; place-items:center; }
-.is-scrim{
-  position:absolute; inset:0; background:rgba(4,3,9,.72);
-  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
-  opacity:0; transition:opacity .22s;
-}
-.install-sheet.open .is-scrim{ opacity:1; }
-
-.is-panel{
-  position:relative; width:min(440px, calc(100vw - 32px));
-  max-height:min(86vh, 700px); overflow:auto;
-  padding:28px 26px 26px; border-radius:var(--r-xl);
-  background:linear-gradient(168deg,#16122A,#0C0918);
-  border:1px solid var(--line-2);
-  box-shadow:0 30px 80px rgba(0,0,0,.65);
-  transform:translateY(14px) scale(.98); opacity:0;
-  transition:transform .26s cubic-bezier(.2,.8,.3,1), opacity .22s;
-}
-.install-sheet.open .is-panel{ transform:none; opacity:1; }
-
-.is-x{
-  position:absolute; top:12px; right:14px; width:34px; height:34px;
-  border:0; background:none; color:var(--ink-3); font-size:26px; line-height:1;
-  cursor:pointer; border-radius:10px;
-}
-.is-x:hover{ color:var(--ink); background:var(--panel); }
-
-.is-h{ font-size:20px; padding-right:30px; }
-.is-steps{ margin:20px 0 0; padding:0; list-style:none; counter-reset:s; }
-.is-steps li{
-  position:relative; counter-increment:s; padding:0 0 16px 40px;
-  font-size:14.5px; color:var(--ink-2); line-height:1.6;
-}
-.is-steps li::before{
-  content:counter(s); position:absolute; left:0; top:-1px;
-  width:26px; height:26px; border-radius:8px; display:grid; place-items:center;
-  font-family:var(--mono); font-size:11.5px; font-weight:800;
-  background:var(--blue-dim); border:1px solid rgba(110,155,255,.35); color:#BFD3FF;
-}
-.is-steps strong{ color:var(--ink); }
-.is-steps svg{
-  width:15px; height:15px; display:inline-block; vertical-align:-3px;
-  margin:0 1px; color:var(--blue-lite);
-}
-.is-note{
-  font-size:13px; color:var(--ink-3); line-height:1.6;
-  padding-top:14px; border-top:1px solid var(--line);
-}
-
 @media (max-width:620px){
-  .install-row{ gap:8px; }
+  .store-row{ gap:8px; }
   .ibadge{ flex:1 1 calc(50% - 4px); padding:9px 12px; gap:9px; }
   .ib-main{ font-size:13.5px; }
   .ib-sub{ font-size:9px; }
-  .is-panel{ padding:26px 20px 22px; border-radius:var(--r-lg); }
 }
 
 /* ── mobile: tighten the hero so the install row reaches the fold ── */
@@ -628,7 +572,7 @@ a.feat:hover .feat-go{ color:var(--ink); }
   .hero-sub{ margin-top:16px; font-size:16px; }
 
   .hero-grid{ gap:20px; }
-  .install-row{ margin-top:16px; }
+  .store-row{ margin-top:16px; }
 
   .dropzone{ padding:26px 18px; gap:11px; }
   .dz-ic{ width:52px; height:52px; border-radius:16px; }
@@ -644,7 +588,7 @@ a.feat:hover .feat-go{ color:var(--ink); }
 
 
 @media (max-width:620px){
-  .install-row{ margin-top:14px; }
+  .store-row{ margin-top:14px; }
   .install-note{ margin-top:8px; font-size:12px; }
 }
 
@@ -733,4 +677,22 @@ a.feat:hover .feat-go{ color:var(--ink); }
 .fine{ font-size:12.5px; color:var(--ink-3); }
 @media (max-width:860px){
   .lawyers-grid{ grid-template-columns:1fr; }
+}
+
+/* ── the app: heading beside the badges, then a swipeable row of shots ── */
+.app-head{ display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:24px; }
+.app-head .store-row{ margin-top:0; }
+.shots{
+  display:flex; gap:16px; margin-top:44px; padding-bottom:12px;
+  overflow-x:auto; scroll-snap-type:x mandatory; overscroll-behavior-x:contain;
+  scrollbar-width:thin;
+}
+.shots img{
+  flex:none; width:clamp(180px, 22vw, 240px); height:auto;
+  border-radius:22px; border:1px solid var(--line); scroll-snap-align:start;
+}
+.shots:focus-visible{ outline:2px solid var(--blue-lite); outline-offset:4px; border-radius:22px; }
+@media (max-width:620px){
+  .shots{ margin-top:32px; gap:12px; margin-inline:-16px; padding-inline:16px; scroll-padding-inline:16px; }
+  .shots img{ width:62vw; border-radius:18px; }
 }
